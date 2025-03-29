@@ -7,10 +7,15 @@ const Boom = require("@hapi/boom");
 
 // Función para manejar mensajes entrantes
 async function handleMessage(sock, sender, messageContent) {
+	    const lowerCaseMessage = messageContent.toLowerCase()
+
+        // Usamos expresiones regulares para detectar "hola" o "buenos días"
+        if (/hola|buenos días|buenas tardes|buenos dias/.test(lowerCaseMessage)) {
+                await sendWelcomeMessage(sock, sender);
+                return; // Salimos de la función después de enviar el mensaje
+        }
+
 	switch (messageContent.toLowerCase()) {
-		case "hola":
-			await sendWelcomeMessage(sock, sender);
-			break;
 		case "1":
 			await sendOpeningHours(sock, sender);
 			break;
@@ -34,19 +39,19 @@ async function sendWelcomeMessage(sock, sender) {
 	const replyMessage = `🙌 Hola, bienvenido/a, soy *Optibot* asistente virtual de *Optica Jorvics* 👓
 ¿En qué puedo ayudarte hoy?
 
-1️⃣ *Horario de atención* 🕞
-2️⃣ *Chequeo visual* 👁️
-3️⃣ *Donde estamos* 📍
-4️⃣ *Cuenta bancaria* 💳
+1️⃣  *Horario de atención* 🕞
+2️⃣  *Chequeo visual* 👁️ 
+3️⃣  *Donde estamos* 📍
+4️⃣  *Cuenta bancaria* 💳
     `;
 	await sock.sendMessage(sender, { text: replyMessage });
 }
 
 // Función para enviar el mensaje de horario de atención
 async function sendOpeningHours(sock, sender) {
-	const replyMessage = `🕞 *Horario de atención*
-- Lunes a Viernes: 10:00 a 14:00 hrs y 15:00 a 19:00 hrs
-- Sábado: *Por definir*
+	const replyMessage = `🕞 *Horario de atención*	
+- Lunes a Viernes: 10:00 - 14:00 hrs y 15:00 - 19:00 hrs
+- Sábados abierto: 5 y 12 de Abril  de 10:00 - 14:00 hrs 
     `;
 	await sock.sendMessage(sender, { text: replyMessage });
 }
@@ -54,9 +59,9 @@ async function sendOpeningHours(sock, sender) {
 // Función para enviar el mensaje de chequeo visual
 async function sendVisualCheckMessage(sock, sender) {
 	const replyMessage = `👁️ *Chequeo visual* gratuito por la compra de sus lentes opticos!
-- Nuestro horario de chequeo visual es de 11:30 - 13:30 y de 15:30 - 17:40
-- *Fechas especiales mes de Septiembre:* Por definir 
-🔴Para agendar su chequeo visual, escribanos al WhatsApp o Llamenos🔴
+- Nuestro horario de chequeo visual es de 11:30 - 13:30 y de 15:30 - 18:00 hrs
+- Día Sábado 5 y 12 de Abril, abierto de 10:00 - 14:00 hrs
+Para agendar su chequeo visual, escribanos al WhatsApp o Llamenos🔴
     `;
 	await sock.sendMessage(sender, { text: replyMessage });
 }
@@ -64,7 +69,7 @@ async function sendVisualCheckMessage(sock, sender) {
 // Función para enviar el mensaje de la ubicación
 async function sendLocationMessage(sock, sender) {
 	const replyMessage = `📍 *Donde estamos*
-stamos ubicados en Gran Av. José Miguel Carrera 6483, METRO LO OVALLE, La Cisterna, Región Metropolitana
+Estamos ubicados en Gran Av. José Miguel Carrera 6483, METRO LO OVALLE, La Cisterna, Región Metropolitana
 Te dejamos nuestro mapa para que puedas llegar sin problemas 🗺️
 https://maps.app.goo.gl/apFHXEmwkMx8tGb18
     `;
