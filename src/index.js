@@ -51,7 +51,7 @@ async function sendWelcomeMessage(sock, sender) {
 async function sendOpeningHours(sock, sender) {
 	const replyMessage = `🕞 *Horario de atención*	
 - Lunes a Viernes: 10:00 - 14:00 hrs y 15:00 - 19:00 hrs
-- Sábados abierto: 5 y 26 de Abril  de 10:00 - 14:00 hrs 
+- Sábados abierto: 17 y 31 de Mayo  de 10:00 - 14:00 hrs 
     `;
 	await sock.sendMessage(sender, { text: replyMessage });
 }
@@ -60,7 +60,7 @@ async function sendOpeningHours(sock, sender) {
 async function sendVisualCheckMessage(sock, sender) {
 	const replyMessage = `👁️ *Chequeo visual* gratuito por la compra de sus lentes opticos!
 - Nuestro horario de chequeo visual es de 11:30 - 13:30 y de 15:30 - 18:00 hrs
-- Día Sábado 5 y 26 de Abril, abierto de 10:00 - 14:00 hrs
+- Día Sábado 17 y 31 de Mayo, abierto de 10:00 - 14:00 hrs
 Para agendar su chequeo visual, escribanos al WhatsApp o Llamenos🔴
     `;
 	await sock.sendMessage(sender, { text: replyMessage });
