@@ -92,40 +92,34 @@ Cuenta Corriente
 }
 
 // Función para enviar el mensaje de agradecimiento
-async function sendThanksMessage(sock, sender) {
-	const replyMessage = `🙌 Gracias por confiar en *Optica Jorvics* 👓 Recuerda seguirnos en nuestras redes sociales 👌
-[*Instagram*] https://www.instagram.com/optica_jorvics/
-[*Facebook*] https://web.facebook.com/opticajorvics
-Y recuerda dejarnos una linda reseña en Google 🌟
-    `;
-	await sock.sendMessage(sender, { text: replyMessage });
-}
-
-// Función principal para iniciar el bot
 async function startBot() {
-	const { state, saveCreds } = await useMultiFileAuthState("auth_info");
+	const { state, saveCreds } = await useMultiFileAuthState("./auth_info");
 
 	const sock = makeWASocket({
 		auth: state,
-		printQRInTerminal: true, // ✅ ahora verás el QR en consola
+		printQRInTerminal: false, // ❌ lo desactivamos
 	});
 
 	sock.ev.on("creds.update", saveCreds);
 
 	sock.ev.on("connection.update", (update) => {
-		const { connection, lastDisconnect } = update;
+		const { connection, lastDisconnect, qr } = update;
+
+		if (qr) {
+			console.log("🔐 Escanea el siguiente código QR:");
+			qrcode.generate(qr, { small: true }); // ✅ QR explícito
+		}
 
 		if (connection === "close") {
 			const shouldReconnect =
 				lastDisconnect?.error?.output?.statusCode !== 401;
 
-			if (shouldReconnect) {
-				console.log("Reconectando...");
-				startBot();
-			} else {
-				console.log("Sesión cerrada. Escanea el QR nuevamente.");
-			}
-		} else if (connection === "open") {
+			console.log("Conexión cerrada. Reintentando...");
+			if (shouldReconnect) startBot();
+			else console.log("Sesión cerrada permanentemente.");
+		}
+
+		if (connection === "open") {
 			console.log("✅ Conectado exitosamente a WhatsApp");
 		}
 	});
