@@ -107,28 +107,26 @@ async function startBot() {
 
 	const sock = makeWASocket({
 		auth: state,
-		printQRInTerminal: true,
+		printQRInTerminal: true, // ✅ ahora verás el QR en consola
 	});
 
 	sock.ev.on("creds.update", saveCreds);
 
 	sock.ev.on("connection.update", (update) => {
-		const { connection, qr, lastDisconnect } = update;
-		if (qr) {
-			qrcode.generate(qr, { small: true });
-		}
+		const { connection, lastDisconnect } = update;
 
 		if (connection === "close") {
 			const shouldReconnect =
-				lastDisconnect.error &&
-				lastDisconnect.error.output &&
-				lastDisconnect.error.output.statusCode !== 401;
+				lastDisconnect?.error?.output?.statusCode !== 401;
+
 			if (shouldReconnect) {
 				console.log("Reconectando...");
 				startBot();
+			} else {
+				console.log("Sesión cerrada. Escanea el QR nuevamente.");
 			}
 		} else if (connection === "open") {
-			console.log("Conectado exitosamente a WhatsApp");
+			console.log("✅ Conectado exitosamente a WhatsApp");
 		}
 	});
 
