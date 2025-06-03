@@ -1,8 +1,8 @@
 services:
   whatsapp-bot:
     build: .
-    ports:
-      - "3000:3000"  # Cambia este puerto si es necesario
+    container_name: whatsapp-bot
     volumes:
-      - .:/usr/src/app  # Monta el directorio actual en el contenedor
+      - ./auth_info:/usr/src/app/auth_info   # Solo montamos la sesión
     command: npm start
+    tty: true   # Para que el QR se imprima correctamente en terminal
