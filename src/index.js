@@ -50,50 +50,96 @@ async function handleMessage(sock, sender, messageContent) {
 }
 
 async function sendWelcomeMessage(sock, sender) {
-  const replyMessage = `🙌 Hola, soy *Optibot* de *Óptica Jorvics* 👓
-¿En qué puedo ayudarte?
+  const replyMessage = `👋 Bienvenido(a) a *Óptica Jorvics*
 
-1️⃣  *Horario de atención* 🕞
-2️⃣  *Chequeo visual* 👁️
-3️⃣  *Dónde estamos* 📍
-4️⃣  *Cuenta bancaria* 💳`;
+Soy su asistente virtual y estoy aquí para ayudarle. 
+
+Para obtener información, por favor escriba el NÚMERO de la opción que desea consultar:
+
+1️⃣  Para conocer nuestros *HORARIOS DE ATENCIÓN*
+2️⃣  Para agendar un *CHEQUEO VISUAL GRATUITO*
+3️⃣  Para saber *CÓMO LLEGAR* a nuestra óptica
+4️⃣  Para ver nuestra *INFORMACIÓN BANCARIA*
+
+Por ejemplo, escriba "1" si quiere saber nuestros horarios.`;
   await sock.sendMessage(sender, { text: replyMessage });
 }
 
 async function sendOpeningHours(sock, sender) {
-  const replyMessage = `🕞 *Horario de atención*
-- Lunes a Viernes: 10:00 - 14:00 y 15:00 - 19:00 hrs
-- Sábado 14 y 28 de junio: 10:00 - 14:00 hrs`;
+  const replyMessage = `🕐 *HORARIOS DE ATENCIÓN*
+
+Entre semana:
+- De Lunes a Viernes
+- Mañana: 10:00 AM a 2:00 PM
+- Tarde: 3:00 PM a 7:00 PM
+
+Días especiales de Junio:
+- Sábado 14 y Sábado 28
+- Horario: 10:00 AM a 2:00 PM
+
+Si necesita otra información, puede escribir otro número de las opciones anteriores.`;
   await sock.sendMessage(sender, { text: replyMessage });
 }
 
 async function sendVisualCheckMessage(sock, sender) {
-  const replyMessage = `👁️ *Chequeo visual* gratuito por compra de lentes
-- Horario: 11:30 - 13:30 y 15:30 - 18:00 hrs
-- Sábado 14 y 28 de junio: 10:00 - 14:00 hrs
-Para agendar, contáctanos por WhatsApp o llámanos 🔴`;
+  const replyMessage = `👁️ *CHEQUEO VISUAL GRATUITO*
+
+Le ofrecemos un chequeo visual sin costo al comprar sus lentes.
+
+Horarios para chequeos:
+- Lunes a Viernes:
+  Mañana: 11:30 AM a 1:30 PM
+  Tarde: 3:30 PM a 6:00 PM
+- Sábados 14 y 28 de Junio:
+  De 10:00 AM a 2:00 PM
+
+Para agendar su hora puede:
+1. Escribirnos por este mismo WhatsApp
+2. Llamarnos por teléfono
+
+¿Desea agendar ahora? Responda "SI" y le atenderemos personalmente.`;
   await sock.sendMessage(sender, { text: replyMessage });
 }
 
 async function sendLocationMessage(sock, sender) {
-  const replyMessage = `📍 *Dónde estamos*
-Gran Av. José Miguel Carrera 6483, METRO LO OVALLE, La Cisterna, RM.
-Mapa: https://maps.app.goo.gl/apFHXEmwkMx8tGb18`;
+  const replyMessage = `📍 *¿CÓMO LLEGAR A ÓPTICA JORVICS?*
+
+Nuestra dirección es:
+Gran Avenida José Miguel Carrera 6483
+La Cisterna, Región Metropolitana
+
+Punto de referencia: 
+- Estamos junto al METRO LO OVALLE
+
+Para ver el mapa en su teléfono, haga clic en este enlace:
+https://maps.app.goo.gl/apFHXEmwkMx8tGb18
+
+¿Necesita más indicaciones? Responda "SI" y le ayudaremos personalmente.`;
   await sock.sendMessage(sender, { text: replyMessage });
 }
 
 async function sendBankAccountMessage(sock, sender) {
-  const replyMessage = `💳 *Cuenta bancaria*
-Scotiabank
-RUT: 4.882.101-4
-Correo: jorvics6483@gmail.com
-Titular: Victor Moraga Pino
-Cuenta Corriente: 57015829`;
+  const replyMessage = `💳 *INFORMACIÓN BANCARIA*
+
+Estos son nuestros datos bancarios para transferencias:
+
+- Banco: Scotiabank
+- Nombre: Victor Moraga Pino
+- RUT: 4.882.101-4
+- Tipo: Cuenta Corriente
+- Número: 57015829
+- Correo: jorvics6483@gmail.com
+
+Por favor, después de realizar su transferencia, envíenos el comprobante por este mismo WhatsApp.`;
   await sock.sendMessage(sender, { text: replyMessage });
 }
 
 async function sendThanksMessage(sock, sender) {
-  const replyMessage = `🙏 ¡De nada! Si necesitas algo más, aquí estoy.`;
+  const replyMessage = `🙏 ¡Gracias por contactarnos! 
+
+Recuerde que puede escribir cualquier número del 1 al 4 si necesita más información.
+
+¡Que tenga un excelente día!`;
   await sock.sendMessage(sender, { text: replyMessage });
 }
 
