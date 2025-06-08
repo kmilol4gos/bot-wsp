@@ -60,8 +60,7 @@ Para obtener información, por favor escriba el NÚMERO de la opción que desea 
 2️⃣  Para agendar un *CHEQUEO VISUAL GRATUITO*
 3️⃣  Para saber *CÓMO LLEGAR* a nuestra óptica
 4️⃣  Para ver nuestra *INFORMACIÓN BANCARIA*
-
-Por ejemplo, escriba "1" si quiere saber nuestros horarios.`;
+`;
   await sock.sendMessage(sender, { text: replyMessage });
 }
 
@@ -109,7 +108,7 @@ Gran Avenida José Miguel Carrera 6483
 La Cisterna, Región Metropolitana
 
 Punto de referencia: 
-- Estamos junto al METRO LO OVALLE
+- Estamos cerca al METRO LO OVALLE
 
 Para ver el mapa en su teléfono, haga clic en este enlace:
 https://maps.app.goo.gl/apFHXEmwkMx8tGb18
