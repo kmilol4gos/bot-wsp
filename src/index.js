@@ -72,8 +72,8 @@ Entre semana:
 - Mañana: 10:00 AM a 2:00 PM
 - Tarde: 3:00 PM a 7:00 PM
 
-Días especiales de Junio:
-- Sábado 14 y Sábado 28
+Días especiales de Julio:
+- Sábado 12 y Sábado 26
 - Horario: 10:00 AM a 2:00 PM
 
 Si necesita otra información, puede escribir otro número de las opciones anteriores.`;
@@ -89,7 +89,7 @@ Horarios para chequeos:
 - Lunes a Viernes:
   Mañana: 11:30 AM a 1:30 PM
   Tarde: 3:30 PM a 6:00 PM
-- Sábados 14 y 28 de Junio:
+- Sábados 12 y 26 de Julio:
   De 10:00 AM a 2:00 PM
 
 Para agendar su hora puede:
