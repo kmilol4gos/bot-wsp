@@ -144,82 +144,137 @@ Recuerde que puede escribir cualquier número del 1 al 4 si necesita más inform
 // FUNCIÓN PRINCIPAL DE INICIALIZACIÓN
 // ----------------------------------
 async function startBot() {
-	// 1. Carga o crea estado de autenticación en ./auth_info
-	const { state, saveCreds } = await useMultiFileAuthState("./auth_info");
+	try {
+		// 1. Carga o crea estado de autenticación en ./auth_info
+		const { state, saveCreds } = await useMultiFileAuthState("./auth_info");
 
-	// 2. Crear el socket sin `version` (Baileys v6.6.0 lo maneja internamente)
-	const sock = makeWASocket({
-		auth: state,
-		printQRInTerminal: true, // Mostrar QR la primera vez
-		browser: Browsers.macOS("Optibot-Baileys"), // Nombre arbitrario/identificable
-		// syncFullHistory: true, // Opcional, si necesita recuperar chats previos
-	});
+		console.log("📱 Intentando conectar con sesión existente...");
 
-	// 3. Guardar credenciales cada vez que Baileys las actualice
-	sock.ev.on("creds.update", saveCreds);
+		// 2. Crear el socket con configuración optimizada para Docker
+		const sock = makeWASocket({
+			auth: state,
+			printQRInTerminal: !state.creds?.registered, // Solo mostrar QR si no hay sesión
+			browser: Browsers.macOS("Optibot-Baileys"),
+			connectTimeoutMs: 60000, // Timeout más largo
+			defaultQueryTimeoutMs: 60000,
+			markOnlineOnConnect: true,
+			syncFullHistory: false, // Evitar sincronizar historial completo
+		});
 
-	// 4. Manejo de eventos de conexión
-	sock.ev.on("connection.update", (update) => {
-		const { connection, lastDisconnect, qr } = update;
+		// 3. Guardar credenciales cada vez que Baileys las actualice
+		sock.ev.on("creds.update", saveCreds);
 
-		// 4.1. Si hay QR, imprimir en consola
-		if (qr) {
-			console.log("⏳ Escanea este código QR con tu WhatsApp (MD):");
-			qrcode.generate(qr, { small: true });
-		}
+		// 4. Manejo de eventos de conexión
+		sock.ev.on("connection.update", (update) => {
+			const { connection, lastDisconnect, qr } = update;
 
-		// 4.2. Si la conexión se cierra
-		if (connection === "close") {
-			const statusCode = lastDisconnect?.error?.output?.statusCode;
-			console.log("❌ Conexión cerrada. Código de status:", statusCode);
-			console.log(
-				"Detalle del último error:",
-				JSON.stringify(lastDisconnect, null, 2)
-			);
+			// 4.1. Si hay QR y no tenemos sesión registrada
+			if (qr && !state.creds?.registered) {
+				console.log("⏳ Escanea este código QR con tu WhatsApp (MD):");
+				qrcode.generate(qr, { small: true });
+			} else if (qr) {
+				console.log("🔄 QR generado, pero intentando usar sesión existente...");
+			}
 
-			// Si no es logout (401), reintentar en 5 s
-			if (statusCode !== DisconnectReason.loggedOut) {
-				console.log("🔄 Reconectando en 5 segundos...");
+			// 4.2. Si la conexión se cierra
+			if (connection === "close") {
+				const statusCode = lastDisconnect?.error?.output?.statusCode;
+				console.log("❌ Conexión cerrada. Código de status:", statusCode);
+
+				// Manejar diferentes tipos de desconexión
+				switch (statusCode) {
+					case DisconnectReason.badSession:
+						console.log("🔧 Sesión corrupta, limpiando datos...");
+						// Opcional: limpiar auth_info y reiniciar
+						break;
+					case DisconnectReason.connectionClosed:
+						console.log("🔄 Conexión cerrada, reconectando...");
+						setTimeout(startBot, 3000);
+						break;
+					case DisconnectReason.connectionLost:
+						console.log("📡 Conexión perdida, reconectando...");
+						setTimeout(startBot, 5000);
+						break;
+					case DisconnectReason.connectionReplaced:
+						console.log("🔄 Conexión reemplazada, reconectando...");
+						setTimeout(startBot, 3000);
+						break;
+					case DisconnectReason.loggedOut:
+						console.log("🚫 Sesión cerrada permanentemente.");
+						console.log(
+							"   - Elimina ./auth_info y reinicia para obtener nuevo QR."
+						);
+						break;
+					case DisconnectReason.restartRequired:
+						console.log("🔄 Reinicio requerido...");
+						setTimeout(startBot, 2000);
+						break;
+					case DisconnectReason.timedOut:
+						console.log("⏰ Timeout, reconectando...");
+						setTimeout(startBot, 5000);
+						break;
+					default:
+						console.log("🔄 Reconectando en 5 segundos...");
+						setTimeout(startBot, 5000);
+						break;
+				}
+			}
+
+			// 4.3. Si la conexión se abrió correctamente
+			if (connection === "open") {
+				console.log("✅ Conectado exitosamente a WhatsApp");
+				console.log("📞 Bot listo para recibir mensajes");
+			}
+
+			// 4.4. Estado de conectando
+			if (connection === "connecting") {
+				console.log("🔄 Conectando a WhatsApp...");
+			}
+		});
+
+		// 5. Manejo mejorado de errores de stream
+		sock.ws?.on("CB:stream:error", (err) => {
+			console.error("⚠️ Error de stream:", err);
+			if (err?.code === "515" || err?.code === "503") {
+				console.log("🚨 Error de stream, reiniciando en 5s...");
 				setTimeout(startBot, 5000);
-			} else {
-				console.log("🚫 Sesión cerrada permanentemente (loggedOut).");
-				console.log(
-					"   - Para obtener un nuevo QR, elimina ./auth_info y reinicia el bot."
-				);
 			}
-		}
+		});
 
-		// 4.3. Si la conexión se abrió correctamente
-		if (connection === "open") {
-			console.log("✅ Conectado exitosamente a WhatsApp");
-		}
-	});
+		// 6. Escuchar mensajes entrantes con mejor manejo de errores
+		sock.ev.on("messages.upsert", async (m) => {
+			try {
+				const msg = m.messages[0];
+				if (!msg.message || msg.key.fromMe) return;
 
-	// 5. Capturar errores de stream (por ejemplo, “515”)
-	sock.ws.on("CB:stream:error", (err) => {
-		console.error("⚠️ Error de stream:", err);
-		if (err?.code === "515") {
-			console.log("🚨 Error 515: reiniciando conexión en 5 s...");
-			setTimeout(startBot, 5000);
-		}
-	});
+				const sender = msg.key.remoteJid;
+				const messageContent =
+					msg.message.conversation ||
+					msg.message.extendedTextMessage?.text ||
+					msg.message.imageMessage?.caption ||
+					msg.message.videoMessage?.caption;
 
-	// 6. Escuchar mensajes entrantes
-	sock.ev.on("messages.upsert", async (m) => {
-		try {
-			const msg = m.messages[0];
-			if (!msg.message || msg.key.fromMe) return;
+				if (messageContent) {
+					console.log(`📥 Mensaje de ${sender}: ${messageContent}`);
+					await handleMessage(sock, sender, messageContent);
+				}
+			} catch (error) {
+				console.error("🚧 Error manejando mensaje:", error);
 
-			const sender = msg.key.remoteJid;
-			const messageContent =
-				msg.message.conversation || msg.message.extendedTextMessage?.text;
-			if (messageContent) {
-				await handleMessage(sock, sender, messageContent);
+				// Si es error de desencriptación, continuar sin romper el bot
+				if (
+					error.name === "PreKeyError" ||
+					error.message?.includes("decrypt")
+				) {
+					console.log("⚠️ Mensaje no pudo ser desencriptado, continuando...");
+				}
 			}
-		} catch (error) {
-			console.error("🚧 Error manejando mensaje:", error);
-		}
-	});
+		});
+	} catch (error) {
+		console.error("💥 Error fatal iniciando bot:", error);
+		console.log("🔄 Reintentando en 10 segundos...");
+		setTimeout(startBot, 10000);
+	}
 }
 
 // 7. Ejecutar el bot
