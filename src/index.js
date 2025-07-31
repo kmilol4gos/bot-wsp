@@ -149,12 +149,19 @@ async function startBot() {
 		// 1. Carga o crea estado de autenticación en ./auth_info
 		const { state, saveCreds } = await useMultiFileAuthState("./auth_info");
 
-		console.log("📱 Intentando conectar con sesión existente...");
+		// Verificar si hay sesión válida
+		const hasValidSession = state.creds?.registered;
+
+		if (hasValidSession) {
+			console.log("📱 Intentando conectar con sesión existente...");
+		} else {
+			console.log("🆕 No hay sesión guardada, preparando para mostrar QR...");
+		}
 
 		// 2. Crear el socket con configuración más conservadora
 		const sock = makeWASocket({
 			auth: state,
-			printQRInTerminal: !state.creds?.registered, // Solo mostrar QR si no hay sesión
+			printQRInTerminal: true, // Siempre mostrar QR cuando sea necesario
 			browser: Browsers.ubuntu("Chrome"), // Cambiar a Ubuntu Chrome
 			connectTimeoutMs: 90000, // Timeout más largo
 			defaultQueryTimeoutMs: 90000,
@@ -169,12 +176,13 @@ async function startBot() {
 		sock.ev.on("connection.update", (update) => {
 			const { connection, lastDisconnect, qr } = update;
 
-			// 4.1. Si hay QR y no tenemos sesión registrada
-			if (qr && !state.creds?.registered) {
-				console.log("⏳ Escanea este código QR con tu WhatsApp (MD):");
+			// 4.1. Si hay QR, mostrarlo siempre
+			if (qr) {
+				console.log("⏳ Escanea este código QR con tu WhatsApp:");
 				qrcode.generate(qr, { small: true });
-			} else if (qr) {
-				console.log("🔄 QR generado, pero intentando usar sesión existente...");
+				console.log(
+					"� Abre WhatsApp en tu teléfono → Dispositivos vinculados → Vincular dispositivo"
+				);
 			}
 
 			// 4.2. Si la conexión se cierra
@@ -184,6 +192,25 @@ async function startBot() {
 
 				// Manejar diferentes tipos de desconexión con delays más largos
 				switch (statusCode) {
+					case 401: // No autorizado - necesita nuevo QR
+						console.log(
+							"🔑 Error 401: Sesión no autorizada, necesita nuevo QR"
+						);
+						console.log("🗑️ Limpiando sesión para generar nuevo QR...");
+						setTimeout(() => {
+							// Limpiar y reiniciar para mostrar QR
+							require("fs").rmSync("./auth_info", {
+								recursive: true,
+								force: true,
+							});
+							startBot();
+						}, 5000);
+						break;
+					case 403: // Prohibido
+						console.log("🚫 Error 403: Acceso prohibido");
+						console.log("⏰ Esperando 60 segundos antes de reconectar...");
+						setTimeout(startBot, 60000);
+						break;
 					case 405: // Método no permitido / IP bloqueada
 						console.log("🚫 Error 405: Posible bloqueo temporal de IP");
 						console.log("⏰ Esperando 60 segundos antes de reconectar...");
@@ -191,7 +218,14 @@ async function startBot() {
 						break;
 					case DisconnectReason.badSession:
 						console.log("🔧 Sesión corrupta, limpiando datos...");
-						console.log("🗑️ Elimina ./auth_info manualmente y reinicia");
+						console.log("🗑️ Limpiando ./auth_info para generar nuevo QR...");
+						setTimeout(() => {
+							require("fs").rmSync("./auth_info", {
+								recursive: true,
+								force: true,
+							});
+							startBot();
+						}, 5000);
 						break;
 					case DisconnectReason.connectionClosed:
 						console.log("🔄 Conexión cerrada, reconectando...");
@@ -207,9 +241,14 @@ async function startBot() {
 						break;
 					case DisconnectReason.loggedOut:
 						console.log("🚫 Sesión cerrada permanentemente.");
-						console.log(
-							"   - Elimina ./auth_info y reinicia para obtener nuevo QR."
-						);
+						console.log("🗑️ Limpiando ./auth_info para generar nuevo QR...");
+						setTimeout(() => {
+							require("fs").rmSync("./auth_info", {
+								recursive: true,
+								force: true,
+							});
+							startBot();
+						}, 5000);
 						break;
 					case DisconnectReason.restartRequired:
 						console.log("🔄 Reinicio requerido...");
