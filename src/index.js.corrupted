@@ -1,16 +1,7 @@
 /**
- * botconst {
-  default: makeWASocket,
-  useMultiFileAuthState,
-  DisconnectReason,
-  Browsers,
-} = require("@whiskeysockets/baileys"); // v6.6.0
-const qrcode = require("qrcode-terminal");
-const fs = require("fs");
-
-// -----------------------
-// FUNCIONES DE MENSAJES
-// -----------------------ot de WhatsApp usando Baileys v6.6.0 (no requiere forzar `version`).
+ * bot.js
+ *
+ * Bot de WhatsApp usando Baileys v6.6.0 (no requiere forzar `version`).
  * Incluye:
  * 1. Persistencia en ./auth_info
  * 2. Mostrar QR con printQRInTerminal en la primera ejecución
@@ -24,6 +15,7 @@ const {
 	Browsers,
 } = require("@whiskeysockets/baileys"); // v6.6.0
 const qrcode = require("qrcode-terminal");
+const fs = require("fs");
 
 // -----------------------
 // FUNCIONES DE MENSAJES
@@ -81,8 +73,8 @@ Entre semana:
 - Mañana: 10:00 AM a 2:00 PM
 - Tarde: 3:00 PM a 7:00 PM
 
-Días especiales de Junio:
-- Sábado 14 y Sábado 28
+Días especiales de Agosto:
+- Sábado 9 y Sábado 30
 - Horario: 10:00 AM a 2:00 PM
 
 Si necesita otra información, puede escribir otro número de las opciones anteriores.`;
@@ -98,12 +90,10 @@ Horarios para chequeos:
 - Lunes a Viernes:
   Mañana: 11:30 AM a 1:30 PM
   Tarde: 3:30 PM a 6:00 PM
-- Sábados 14 y 28 de Junio:
+- Sábados 9 y 30 de Agosto:
   De 10:00 AM a 2:00 PM
 
-Para agendar su hora puede:
-1. Escribirnos por este mismo WhatsApp
-2. Llamarnos por teléfono
+Para agendar su hora puede escribirnos por este mismo WhatsApp (solo atendemos agendas por WhatsApp).
 
 ¿Desea agendar ahora? Responda "SI" y le atenderemos personalmente.`;
 	await sock.sendMessage(sender, { text: replyMessage });
@@ -152,22 +142,191 @@ Recuerde que puede escribir cualquier número del 1 al 4 si necesita más inform
 }
 
 // ----------------------------------
+// FUNCIONES AUXILIARES
+// ----------------------------------
+
+/**
+ * Verifica si existe una sesión válida
+ */
+function hasValidSession() {
+	const authPath = "./auth_info";
+	const credsPath = "./auth_info/creds.json";
+
+	if (!fs.existsSync(authPath)) {
+		return false;
+	}
+
+	if (!fs.existsSync(credsPath)) {
+		return false;
+	}
+
+	try {
+		const credsContent = fs.readFileSync(credsPath, "utf8");
+		const creds = JSON.parse(credsContent);
+
+		// Verificar que tenga campos básicos necesarios
+		if (!creds.noiseKey || !creds.signedIdentityKey) {
+			return false;
+		}
+
+		return true;
+	} catch (error) {
+		console.log("⚠️ Archivo de credenciales corrupto:", error.message);
+		return false;
+	}
+}
+
+/**
+ * Limpia la sesión de manera segura
+ */
+function clearSession() {
+	const authPath = "./auth_info";
+	try {
+		if (fs.existsSync(authPath)) {
+			fs.rmSync(authPath, { recursive: true, force: true });
+			console.log("🗑️ Sesión anterior limpiada");
+		}
+	} catch (error) {
+		console.error("❌ Error limpiando sesión:", error.message);
+		console.log("🔧 Intenta eliminar manualmente el directorio './auth_info'");
+	}
+}
+
+// ----------------------------------
 // FUNCIÓN PRINCIPAL DE INICIALIZACIÓN
 // ----------------------------------
 async function startBot() {
-	// 1. Carga o crea estado de autenticación en ./auth_info
-	const { state, saveCreds } = await useMultiFileAuthState("./auth_info");
+	try {
+		console.log("🤖 Iniciando Optibot WhatsApp...");
 
-	// 2. Crear el socket sin `version` (Baileys v6.6.0 lo maneja internamente)
-	const sock = makeWASocket({
-		auth: state,
-		printQRInTerminal: true, // Mostrar QR la primera vez
-		browser: Browsers.appropriate("Optibot-Baileys"), // Usar un navegador apropiado para el SO
-		// syncFullHistory: true, // Opcional, si necesita recuperar chats previos
-	});
+		// 1. Verificar si existe una sesión válida
+		if (!hasValidSession()) {
+			console.log(
+				"🆕 No hay sesión válida. Se mostrará código QR para conectar."
+			);
+			clearSession(); // Limpiar cualquier archivo corrupto
+		} else {
+			console.log("📱 Sesión existente encontrada, intentando conectar...");
+		}
 
-	// 3. Guardar credenciales cada vez que Baileys las actualice
-	sock.ev.on("creds.update", saveCreds);
+		// 2. Carga o crea estado de autenticación en ./auth_info
+		const { state, saveCreds } = await useMultiFileAuthState("./auth_info");
+
+		// 3. Crear el socket sin `version` (Baileys v6.6.0 lo maneja internamente)
+		const sock = makeWASocket({
+			auth: state,
+			printQRInTerminal: true, // Mostrar QR cuando sea necesario
+			browser: Browsers.macOS("Optibot-Baileys"), // Nombre arbitrario/identificable
+		});
+
+		// 4. Guardar credenciales cada vez que Baileys las actualice
+		sock.ev.on("creds.update", saveCreds);
+
+		// 5. Manejo de eventos de conexión
+		sock.ev.on("connection.update", (update) => {
+			const { connection, lastDisconnect, qr } = update;
+
+			// 5.1. Si hay QR, mostrarlo de manera clara
+			if (qr) {
+				console.log("\n" + "=".repeat(60));
+				console.log("📱 CÓDIGO QR PARA WHATSAPP");
+				console.log("=".repeat(60));
+				qrcode.generate(qr, { small: true });
+				console.log("=".repeat(60));
+				console.log("🔗 Instrucciones:");
+				console.log("1. Abre WhatsApp en tu teléfono");
+				console.log("2. Ve a Configuración → Dispositivos vinculados");
+				console.log("3. Toca 'Vincular un dispositivo'");
+				console.log("4. Escanea el código QR de arriba");
+				console.log("=".repeat(60) + "\n");
+			}
+
+			// 5.2. Si la conexión se cierra
+			if (connection === "close") {
+				const statusCode = lastDisconnect?.error?.output?.statusCode;
+				console.log("❌ Conexión cerrada. Código de status:", statusCode);
+
+				// Manejar errores específicos que requieren nuevo QR
+				if (
+					statusCode === 401 ||
+					statusCode === 403 ||
+					statusCode === 405 ||
+					statusCode === 428
+				) {
+					console.log(
+						"🔑 Sesión inválida/expirada. Limpiando para generar nuevo QR..."
+					);
+					clearSession();
+					console.log("🔄 Reiniciando en 3 segundos...");
+					setTimeout(startBot, 3000);
+					return;
+				}
+
+				// Si no es logout, reintentar
+				if (statusCode !== DisconnectReason.loggedOut) {
+					console.log("🔄 Reconectando en 5 segundos...");
+					setTimeout(startBot, 5000);
+				} else {
+					console.log("🚫 Sesión cerrada permanentemente (loggedOut).");
+					console.log("🔄 Limpiando sesión para generar nuevo QR...");
+					clearSession();
+					setTimeout(startBot, 3000);
+				}
+			}
+
+			// 5.3. Si la conexión se abrió correctamente
+			if (connection === "open") {
+				console.log("✅ Conectado exitosamente a WhatsApp");
+				console.log("🤖 Bot listo para recibir mensajes");
+			}
+
+			// 5.4. Estado de conectando
+			if (connection === "connecting") {
+				console.log("🔄 Conectando a WhatsApp...");
+			}
+		});
+
+		// 6. Capturar errores de stream
+		sock.ws.on("CB:stream:error", (err) => {
+			console.error("⚠️ Error de stream:", err);
+			if (err?.code === "515") {
+				console.log("🚨 Error 515: limpiando sesión y reiniciando...");
+				clearSession();
+				setTimeout(startBot, 5000);
+			}
+		});
+
+		// 7. Escuchar mensajes entrantes
+		sock.ev.on("messages.upsert", async (m) => {
+			try {
+				const msg = m.messages[0];
+				if (!msg.message || msg.key.fromMe) return;
+
+				const sender = msg.key.remoteJid;
+				const messageContent =
+					msg.message.conversation ||
+					msg.message.extendedTextMessage?.text ||
+					msg.message.imageMessage?.caption ||
+					msg.message.videoMessage?.caption;
+
+				if (messageContent) {
+					console.log(`📥 Mensaje de ${sender}: ${messageContent}`);
+					await handleMessage(sock, sender, messageContent);
+				}
+			} catch (error) {
+				console.error("🚧 Error manejando mensaje:", error);
+			}
+		});
+	} catch (error) {
+		console.error("💥 Error fatal iniciando bot:", error);
+
+		// En caso de error fatal, limpiar sesión y reintentar
+		console.log("🗑️ Limpiando sesión debido a error fatal...");
+		clearSession();
+		console.log("🔄 Reintentando en 10 segundos...");
+		setTimeout(startBot, 10000);
+	}
+}
 
 	// 4. Manejo de eventos de conexión
 	sock.ev.on("connection.update", (update) => {
@@ -233,5 +392,6 @@ async function startBot() {
 	});
 }
 
-// 7. Ejecutar el bot
+// 8. Ejecutar el bot
+console.log("🚀 Iniciando Optibot WhatsApp...");
 startBot();
