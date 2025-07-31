@@ -4,8 +4,39 @@
  * Bot de WhatsApp usando Baileys v6.6.0 (no requiere forzar `version`).
  * Incluye:
  * 1. Persistencia en ./auth_info
- * 2. Mostrar QR con printQRInTerminal en la primera ejecución
- * 3. Manejo de DisconnectReason y errores de stream (515)
+ * 2. Mostrar QR con printQRInTerminal en la p		// 5. Manejo de eventos de conexión
+		sock.ev.on("connection.update", (update) => {
+			const { connection, lastDisconnect, qr } = update;
+
+			// 5.1. Si hay QR, mostrarlo inmediatamente
+			if (qr) {
+				console.log("\n" + "=".repeat(50));
+				console.log("⏳ CÓDIGO QR PARA WHATSAPP:");
+				console.log("=".repeat(50));
+				qrcode.generate(qr, { small: true });
+				console.log("=".repeat(50));
+				console.log("📱 Instrucciones:");
+				console.log("1. Abre WhatsApp en tu teléfono");
+				console.log("2. Ve a 'Dispositivos vinculados'");
+				console.log("3. Selecciona 'Vincular dispositivo'");
+				console.log("4. Escanea el código QR de arriba");
+				console.log("=".repeat(50) + "\n");
+			}
+
+			// 5.2. Si la conexión se cierra
+			if (connection === "close") {
+				const statusCode = lastDisconnect?.error?.output?.statusCode;
+				console.log("❌ Conexión cerrada. Código de status:", statusCode);
+
+				// Evitar bucles infinitos - limitar reconexiones
+				if (statusCode === 428 || statusCode === 515) {
+					console.log("🔧 Error de conexión, limpiando sesión...");
+					const fs = require('fs');
+					fs.rmSync('./auth_info', { recursive: true, force: true });
+					console.log("🔄 Reiniciando para mostrar nuevo QR...");
+					setTimeout(startBot, 3000);
+					return;
+				} * 3. Manejo de DisconnectReason y errores de stream (515)
  */
 
 const {
@@ -146,30 +177,41 @@ Recuerde que puede escribir cualquier número del 1 al 4 si necesita más inform
 // ----------------------------------
 async function startBot() {
 	try {
-		// 1. Carga o crea estado de autenticación en ./auth_info
-		const { state, saveCreds } = await useMultiFileAuthState("./auth_info");
+		// 1. Verificar si existe directorio de autenticación
+		const fs = require("fs");
+		const authDirExists = fs.existsSync("./auth_info");
+		const hasCredentials =
+			authDirExists && fs.existsSync("./auth_info/creds.json");
 
-		// Verificar si hay sesión válida
-		const hasValidSession = state.creds?.registered;
-
-		if (hasValidSession) {
-			console.log("📱 Intentando conectar con sesión existente...");
+		if (!authDirExists || !hasCredentials) {
+			console.log(
+				"🆕 No hay sesión guardada, limpiando y preparando para mostrar QR..."
+			);
+			// Limpiar cualquier archivo corrupto
+			if (authDirExists) {
+				fs.rmSync("./auth_info", { recursive: true, force: true });
+			}
 		} else {
-			console.log("🆕 No hay sesión guardada, preparando para mostrar QR...");
+			console.log("📱 Intentando conectar con sesión existente...");
 		}
 
-		// 2. Crear el socket con configuración más conservadora
+		// 2. Carga o crea estado de autenticación en ./auth_info
+		const { state, saveCreds } = await useMultiFileAuthState("./auth_info");
+
+		// 3. Crear el socket con configuración más conservadora
 		const sock = makeWASocket({
 			auth: state,
 			printQRInTerminal: true, // Siempre mostrar QR cuando sea necesario
 			browser: Browsers.ubuntu("Chrome"), // Cambiar a Ubuntu Chrome
-			connectTimeoutMs: 90000, // Timeout más largo
-			defaultQueryTimeoutMs: 90000,
+			connectTimeoutMs: 60000, // Reducir timeout para evitar bucles largos
+			defaultQueryTimeoutMs: 60000,
 			markOnlineOnConnect: false, // No marcar como online inmediatamente
 			syncFullHistory: false, // Evitar sincronizar historial completo
 			generateHighQualityLinkPreview: false, // Reducir carga
 			getMessage: async () => undefined, // Evitar recuperar mensajes perdidos
-		}); // 3. Guardar credenciales cada vez que Baileys las actualice
+		});
+
+		// 4. Guardar credenciales cada vez que Baileys las actualice
 		sock.ev.on("creds.update", saveCreds);
 
 		// 4. Manejo de eventos de conexión
@@ -190,103 +232,86 @@ async function startBot() {
 				const statusCode = lastDisconnect?.error?.output?.statusCode;
 				console.log("❌ Conexión cerrada. Código de status:", statusCode);
 
-				// Manejar diferentes tipos de desconexión con delays más largos
+				// Manejar diferentes tipos de desconexión
 				switch (statusCode) {
 					case 401: // No autorizado - necesita nuevo QR
-						console.log(
-							"🔑 Error 401: Sesión no autorizada, necesita nuevo QR"
-						);
+						console.log("🔑 Error 401: Sesión no autorizada");
 						console.log("🗑️ Limpiando sesión para generar nuevo QR...");
-						setTimeout(() => {
-							// Limpiar y reiniciar para mostrar QR
-							require("fs").rmSync("./auth_info", {
-								recursive: true,
-								force: true,
-							});
-							startBot();
-						}, 5000);
+						const fs = require("fs");
+						fs.rmSync("./auth_info", { recursive: true, force: true });
+						setTimeout(startBot, 3000);
 						break;
 					case 403: // Prohibido
 						console.log("🚫 Error 403: Acceso prohibido");
-						console.log("⏰ Esperando 60 segundos antes de reconectar...");
-						setTimeout(startBot, 60000);
+						console.log("⏰ Esperando 30 segundos antes de reconectar...");
+						setTimeout(startBot, 30000);
 						break;
 					case 405: // Método no permitido / IP bloqueada
 						console.log("🚫 Error 405: Posible bloqueo temporal de IP");
 						console.log("⏰ Esperando 60 segundos antes de reconectar...");
-						setTimeout(startBot, 60000); // 1 minuto
+						setTimeout(startBot, 60000);
 						break;
 					case DisconnectReason.badSession:
 						console.log("🔧 Sesión corrupta, limpiando datos...");
-						console.log("🗑️ Limpiando ./auth_info para generar nuevo QR...");
-						setTimeout(() => {
-							require("fs").rmSync("./auth_info", {
-								recursive: true,
-								force: true,
-							});
-							startBot();
-						}, 5000);
+						require("fs").rmSync("./auth_info", {
+							recursive: true,
+							force: true,
+						});
+						setTimeout(startBot, 3000);
+						break;
+					case DisconnectReason.loggedOut:
+						console.log("� Sesión cerrada permanentemente.");
+						require("fs").rmSync("./auth_info", {
+							recursive: true,
+							force: true,
+						});
+						setTimeout(startBot, 3000);
 						break;
 					case DisconnectReason.connectionClosed:
 						console.log("🔄 Conexión cerrada, reconectando...");
-						setTimeout(startBot, 30000); // 30 segundos
+						setTimeout(startBot, 15000);
 						break;
 					case DisconnectReason.connectionLost:
-						console.log("📡 Conexión perdida, reconectando...");
-						setTimeout(startBot, 45000); // 45 segundos
-						break;
-					case DisconnectReason.connectionReplaced:
-						console.log("🔄 Conexión reemplazada, reconectando...");
-						setTimeout(startBot, 30000);
-						break;
-					case DisconnectReason.loggedOut:
-						console.log("🚫 Sesión cerrada permanentemente.");
-						console.log("🗑️ Limpiando ./auth_info para generar nuevo QR...");
-						setTimeout(() => {
-							require("fs").rmSync("./auth_info", {
-								recursive: true,
-								force: true,
-							});
-							startBot();
-						}, 5000);
-						break;
-					case DisconnectReason.restartRequired:
-						console.log("🔄 Reinicio requerido...");
-						setTimeout(startBot, 30000);
+						console.log("� Conexión perdida, reconectando...");
+						setTimeout(startBot, 20000);
 						break;
 					case DisconnectReason.timedOut:
 						console.log("⏰ Timeout, reconectando...");
-						setTimeout(startBot, 60000); // 1 minuto
+						setTimeout(startBot, 30000);
 						break;
 					default:
-						console.log("🔄 Reconectando en 30 segundos...");
-						setTimeout(startBot, 30000);
+						console.log(
+							`🔄 Error desconocido (${statusCode}), reconectando...`
+						);
+						setTimeout(startBot, 15000);
 						break;
 				}
 			}
 
-			// 4.3. Si la conexión se abrió correctamente
+			// 5.3. Si la conexión se abrió correctamente
 			if (connection === "open") {
 				console.log("✅ Conectado exitosamente a WhatsApp");
 				console.log("📞 Bot listo para recibir mensajes");
 			}
 
-			// 4.4. Estado de conectando
+			// 5.4. Estado de conectando
 			if (connection === "connecting") {
 				console.log("🔄 Conectando a WhatsApp...");
 			}
 		});
 
-		// 5. Manejo mejorado de errores de stream
+		// 6. Manejo mejorado de errores de stream
 		sock.ws?.on("CB:stream:error", (err) => {
 			console.error("⚠️ Error de stream:", err);
 			if (err?.code === "515" || err?.code === "503") {
-				console.log("🚨 Error de stream, reiniciando en 5s...");
+				console.log("🚨 Error de stream, limpiando sesión...");
+				const fs = require("fs");
+				fs.rmSync("./auth_info", { recursive: true, force: true });
 				setTimeout(startBot, 5000);
 			}
 		});
 
-		// 6. Escuchar mensajes entrantes con mejor manejo de errores
+		// 7. Escuchar mensajes entrantes con mejor manejo de errores
 		sock.ev.on("messages.upsert", async (m) => {
 			try {
 				const msg = m.messages[0];
@@ -317,6 +342,11 @@ async function startBot() {
 		});
 	} catch (error) {
 		console.error("💥 Error fatal iniciando bot:", error);
+		// En caso de error fatal, limpiar sesión y reiniciar
+		const fs = require("fs");
+		if (fs.existsSync("./auth_info")) {
+			fs.rmSync("./auth_info", { recursive: true, force: true });
+		}
 		console.log("🔄 Reintentando en 10 segundos...");
 		setTimeout(startBot, 10000);
 	}
