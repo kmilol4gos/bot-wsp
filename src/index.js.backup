@@ -4,9 +4,39 @@
  * Bot de WhatsApp usando Baileys v6.6.0 (no requiere forzar `version`).
  * Incluye:
  * 1. Persistencia en ./auth_info
- * 2. Mostrar QR con printQRInTerminal en la primera ejecución
- * 3. Manejo de DisconnectReason y errores de stream (515)
- * 4. Manejo seguro de eliminación de directorios
+ * 2. Mostrar QR con printQRInTerminal en la p		// 5. Manejo de eventos de conexión
+		sock.ev.on("connection.update", (update) => {
+			const { connection, lastDisconnect, qr } = update;
+
+			// 5.1. Si hay QR, mostrarlo inmediatamente
+			if (qr) {
+				console.log("\n" + "=".repeat(50));
+				console.log("⏳ CÓDIGO QR PARA WHATSAPP:");
+				console.log("=".repeat(50));
+				qrcode.generate(qr, { small: true });
+				console.log("=".repeat(50));
+				console.log("📱 Instrucciones:");
+				console.log("1. Abre WhatsApp en tu teléfono");
+				console.log("2. Ve a 'Dispositivos vinculados'");
+				console.log("3. Selecciona 'Vincular dispositivo'");
+				console.log("4. Escanea el código QR de arriba");
+				console.log("=".repeat(50) + "\n");
+			}
+
+			// 5.2. Si la conexión se cierra
+			if (connection === "close") {
+				const statusCode = lastDisconnect?.error?.output?.statusCode;
+				console.log("❌ Conexión cerrada. Código de status:", statusCode);
+
+				// Evitar bucles infinitos - limitar reconexiones
+				if (statusCode === 428 || statusCode === 515) {
+					console.log("🔧 Error de conexión, limpiando sesión...");
+					const fs = require('fs');
+					fs.rmSync('./auth_info', { recursive: true, force: true });
+					console.log("🔄 Reiniciando para mostrar nuevo QR...");
+					setTimeout(startBot, 3000);
+					return;
+				} * 3. Manejo de DisconnectReason y errores de stream (515)
  */
 
 const {
@@ -58,17 +88,12 @@ async function safeRemoveAuthDir() {
 			return true; // No existe, no hay nada que eliminar
 		} catch (error) {
 			attempts++;
-			console.log(
-				`⚠️ Intento ${attempts}/${maxAttempts} fallido:`,
-				error.message
-			);
+			console.log(`⚠️ Intento ${attempts}/${maxAttempts} fallido:`, error.message);
 
 			if (error.code === "EBUSY" || error.code === "EPERM") {
 				if (attempts < maxAttempts) {
-					console.log(
-						`⏱️ Esperando ${attempts * 2} segundos antes de reintentar...`
-					);
-					await new Promise((resolve) => setTimeout(resolve, attempts * 2000));
+					console.log(`⏱️ Esperando ${attempts * 2} segundos antes de reintentar...`);
+					await new Promise(resolve => setTimeout(resolve, attempts * 2000));
 				}
 			} else {
 				// Para otros errores, no reintentar
@@ -78,15 +103,10 @@ async function safeRemoveAuthDir() {
 		}
 	}
 
-	console.error(
-		"❌ No se pudo eliminar el directorio después de varios intentos."
-	);
-	console.log(
-		"🔧 Intenta eliminar manualmente el directorio './auth_info' y reiniciar."
-	);
+	console.error("❌ No se pudo eliminar el directorio después de varios intentos.");
+	console.log("🔧 Intenta eliminar manualmente el directorio './auth_info' y reiniciar.");
 	return false;
 }
-
 // -----------------------
 // FUNCIONES DE MENSAJES
 // -----------------------
@@ -216,8 +236,6 @@ Recuerde que puede escribir cualquier número del 1 al 4 si necesita más inform
 // ----------------------------------
 async function startBot() {
 	try {
-		console.log("🤖 Iniciando Optibot WhatsApp...");
-
 		// 1. Verificar si existe directorio de autenticación
 		const authDirExists = fs.existsSync("./auth_info");
 		const hasCredentials =
@@ -231,9 +249,7 @@ async function startBot() {
 			if (authDirExists) {
 				const removed = await safeRemoveAuthDir();
 				if (!removed) {
-					console.log(
-						"⚠️ No se pudo limpiar la sesión, continuando de todas formas..."
-					);
+					console.log("⚠️ No se pudo limpiar la sesión, continuando de todas formas...");
 				}
 			}
 		} else {
@@ -259,31 +275,25 @@ async function startBot() {
 		// 4. Guardar credenciales cada vez que Baileys las actualice
 		sock.ev.on("creds.update", saveCreds);
 
-		// 5. Manejo de eventos de conexión
+		// 4. Manejo de eventos de conexión
 		sock.ev.on("connection.update", async (update) => {
 			const { connection, lastDisconnect, qr } = update;
 
-			// 5.1. Si hay QR, mostrarlo claramente
+			// 4.1. Si hay QR, mostrarlo siempre
 			if (qr) {
-				console.log("\n" + "=".repeat(50));
-				console.log("⏳ CÓDIGO QR PARA WHATSAPP:");
-				console.log("=".repeat(50));
+				console.log("⏳ Escanea este código QR con tu WhatsApp:");
 				qrcode.generate(qr, { small: true });
-				console.log("=".repeat(50));
-				console.log("📱 Instrucciones:");
-				console.log("1. Abre WhatsApp en tu teléfono");
-				console.log("2. Ve a 'Dispositivos vinculados'");
-				console.log("3. Selecciona 'Vincular dispositivo'");
-				console.log("4. Escanea el código QR de arriba");
-				console.log("=".repeat(50) + "\n");
+				console.log(
+					"� Abre WhatsApp en tu teléfono → Dispositivos vinculados → Vincular dispositivo"
+				);
 			}
 
-			// 5.2. Si la conexión se cierra
+			// 4.2. Si la conexión se cierra
 			if (connection === "close") {
 				const statusCode = lastDisconnect?.error?.output?.statusCode;
 				console.log("❌ Conexión cerrada. Código de status:", statusCode);
 
-				// Manejar diferentes tipos de desconexión de manera segura
+				// Manejar diferentes tipos de desconexión
 				switch (statusCode) {
 					case 401: // No autorizado - necesita nuevo QR
 						console.log("🔑 Error 401: Sesión no autorizada");
@@ -298,22 +308,8 @@ async function startBot() {
 						break;
 					case 405: // Método no permitido / IP bloqueada
 						console.log("🚫 Error 405: Posible bloqueo temporal de IP");
-						console.log("🗑️ Limpiando sesión para generar nuevo QR...");
-						await safeRemoveAuthDir();
 						console.log("⏰ Esperando 60 segundos antes de reconectar...");
 						setTimeout(startBot, 60000);
-						break;
-					case 428: // Precondition Required
-						console.log("🔧 Error 428: Sesión inválida");
-						console.log("🗑️ Limpiando sesión para generar nuevo QR...");
-						await safeRemoveAuthDir();
-						setTimeout(startBot, 5000);
-						break;
-					case 515: // Stream error
-						console.log("🔧 Error 515: Error de stream");
-						console.log("🗑️ Limpiando sesión para generar nuevo QR...");
-						await safeRemoveAuthDir();
-						setTimeout(startBot, 5000);
 						break;
 					case DisconnectReason.badSession:
 						console.log("🔧 Sesión corrupta, limpiando datos...");
@@ -330,7 +326,7 @@ async function startBot() {
 						setTimeout(startBot, 15000);
 						break;
 					case DisconnectReason.connectionLost:
-						console.log("📡 Conexión perdida, reconectando...");
+						console.log("� Conexión perdida, reconectando...");
 						setTimeout(startBot, 20000);
 						break;
 					case DisconnectReason.timedOut:
@@ -359,11 +355,12 @@ async function startBot() {
 		});
 
 		// 6. Manejo mejorado de errores de stream
-		sock.ws?.on("CB:stream:error", async (err) => {
+		sock.ws?.on("CB:stream:error", (err) => {
 			console.error("⚠️ Error de stream:", err);
 			if (err?.code === "515" || err?.code === "503") {
-				console.log("🚨 Error de stream crítico, limpiando sesión...");
-				await safeRemoveAuthDir();
+				console.log("🚨 Error de stream, limpiando sesión...");
+				const fs = require("fs");
+				fs.rmSync("./auth_info", { recursive: true, force: true });
 				setTimeout(startBot, 5000);
 			}
 		});
@@ -399,32 +396,15 @@ async function startBot() {
 		});
 	} catch (error) {
 		console.error("💥 Error fatal iniciando bot:", error);
-
-		// En caso de error fatal, manejar limpieza de manera segura
-		try {
-			if (fs.existsSync("./auth_info")) {
-				await safeRemoveAuthDir();
-			}
-		} catch (cleanupError) {
-			console.error("❌ Error durante limpieza:", cleanupError.message);
+		// En caso de error fatal, limpiar sesión y reiniciar
+		const fs = require("fs");
+		if (fs.existsSync("./auth_info")) {
+			fs.rmSync("./auth_info", { recursive: true, force: true });
 		}
-
 		console.log("🔄 Reintentando en 10 segundos...");
 		setTimeout(startBot, 10000);
 	}
 }
 
-// 8. Manejo de señales de proceso para limpieza graciosa
-process.on("SIGINT", async () => {
-	console.log("\n🛑 Recibida señal SIGINT, cerrando bot...");
-	process.exit(0);
-});
-
-process.on("SIGTERM", async () => {
-	console.log("\n🛑 Recibida señal SIGTERM, cerrando bot...");
-	process.exit(0);
-});
-
-// 9. Ejecutar el bot
-console.log("🚀 Iniciando Optibot WhatsApp...");
+// 7. Ejecutar el bot
 startBot();
