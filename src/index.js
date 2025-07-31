@@ -16,6 +16,7 @@ const {
 } = require("@whiskeysockets/baileys"); // v6.6.0
 const qrcode = require("qrcode-terminal");
 
+const diasSabado = "9 y Sábado 30 agosto";
 // -----------------------
 // FUNCIONES DE MENSAJES
 // -----------------------
@@ -73,7 +74,7 @@ Entre semana:
 - Tarde: 3:00 PM a 7:00 PM
 
 Días especiales de Agosto:
-- Sábado 9 y Sábado 30 agosto
+- Sábado ${diasSabado}
 - Horario: 10:00 AM a 2:00 PM
 
 Si necesita otra información, puede escribir otro número de las opciones anteriores.`;
@@ -89,7 +90,7 @@ Horarios para chequeos:
 - Lunes a Viernes:
   Mañana: 11:30 AM a 1:30 PM
   Tarde: 3:30 PM a 6:00 PM
-- Sábados 9 y 30 de Agosto:
+- Sábados ${diasSabado}:
   De 10:00 AM a 2:00 PM
 
 Para agendar su hora puede escribirnos por este mismo WhatsApp (solo atendemos agendas por WhatsApp).
@@ -144,24 +145,24 @@ Recuerde que puede escribir cualquier número del 1 al 4 si necesita más inform
 // FUNCIÓN PRINCIPAL DE INICIALIZACIÓN
 // ----------------------------------
 async function startBot() {
-  try {
-    // 1. Carga o crea estado de autenticación en ./auth_info
-    const { state, saveCreds } = await useMultiFileAuthState("./auth_info");
-    
-    console.log("📱 Intentando conectar con sesión existente...");
+	try {
+		// 1. Carga o crea estado de autenticación en ./auth_info
+		const { state, saveCreds } = await useMultiFileAuthState("./auth_info");
 
-    // 2. Crear el socket con configuración más conservadora
-    const sock = makeWASocket({
-      auth: state,
-      printQRInTerminal: !state.creds?.registered, // Solo mostrar QR si no hay sesión
-      browser: Browsers.ubuntu("Chrome"), // Cambiar a Ubuntu Chrome
-      connectTimeoutMs: 90000, // Timeout más largo
-      defaultQueryTimeoutMs: 90000,
-      markOnlineOnConnect: false, // No marcar como online inmediatamente
-      syncFullHistory: false, // Evitar sincronizar historial completo
-      generateHighQualityLinkPreview: false, // Reducir carga
-      getMessage: async () => undefined, // Evitar recuperar mensajes perdidos
-    });		// 3. Guardar credenciales cada vez que Baileys las actualice
+		console.log("📱 Intentando conectar con sesión existente...");
+
+		// 2. Crear el socket con configuración más conservadora
+		const sock = makeWASocket({
+			auth: state,
+			printQRInTerminal: !state.creds?.registered, // Solo mostrar QR si no hay sesión
+			browser: Browsers.ubuntu("Chrome"), // Cambiar a Ubuntu Chrome
+			connectTimeoutMs: 90000, // Timeout más largo
+			defaultQueryTimeoutMs: 90000,
+			markOnlineOnConnect: false, // No marcar como online inmediatamente
+			syncFullHistory: false, // Evitar sincronizar historial completo
+			generateHighQualityLinkPreview: false, // Reducir carga
+			getMessage: async () => undefined, // Evitar recuperar mensajes perdidos
+		}); // 3. Guardar credenciales cada vez que Baileys las actualice
 		sock.ev.on("creds.update", saveCreds);
 
 		// 4. Manejo de eventos de conexión
