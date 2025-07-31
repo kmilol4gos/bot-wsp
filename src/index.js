@@ -144,24 +144,24 @@ Recuerde que puede escribir cualquier número del 1 al 4 si necesita más inform
 // FUNCIÓN PRINCIPAL DE INICIALIZACIÓN
 // ----------------------------------
 async function startBot() {
-	try {
-		// 1. Carga o crea estado de autenticación en ./auth_info
-		const { state, saveCreds } = await useMultiFileAuthState("./auth_info");
+  try {
+    // 1. Carga o crea estado de autenticación en ./auth_info
+    const { state, saveCreds } = await useMultiFileAuthState("./auth_info");
+    
+    console.log("📱 Intentando conectar con sesión existente...");
 
-		console.log("📱 Intentando conectar con sesión existente...");
-
-		// 2. Crear el socket con configuración optimizada para Docker
-		const sock = makeWASocket({
-			auth: state,
-			printQRInTerminal: !state.creds?.registered, // Solo mostrar QR si no hay sesión
-			browser: Browsers.macOS("Optibot-Baileys"),
-			connectTimeoutMs: 60000, // Timeout más largo
-			defaultQueryTimeoutMs: 60000,
-			markOnlineOnConnect: true,
-			syncFullHistory: false, // Evitar sincronizar historial completo
-		});
-
-		// 3. Guardar credenciales cada vez que Baileys las actualice
+    // 2. Crear el socket con configuración más conservadora
+    const sock = makeWASocket({
+      auth: state,
+      printQRInTerminal: !state.creds?.registered, // Solo mostrar QR si no hay sesión
+      browser: Browsers.ubuntu("Chrome"), // Cambiar a Ubuntu Chrome
+      connectTimeoutMs: 90000, // Timeout más largo
+      defaultQueryTimeoutMs: 90000,
+      markOnlineOnConnect: false, // No marcar como online inmediatamente
+      syncFullHistory: false, // Evitar sincronizar historial completo
+      generateHighQualityLinkPreview: false, // Reducir carga
+      getMessage: async () => undefined, // Evitar recuperar mensajes perdidos
+    });		// 3. Guardar credenciales cada vez que Baileys las actualice
 		sock.ev.on("creds.update", saveCreds);
 
 		// 4. Manejo de eventos de conexión
@@ -181,23 +181,28 @@ async function startBot() {
 				const statusCode = lastDisconnect?.error?.output?.statusCode;
 				console.log("❌ Conexión cerrada. Código de status:", statusCode);
 
-				// Manejar diferentes tipos de desconexión
+				// Manejar diferentes tipos de desconexión con delays más largos
 				switch (statusCode) {
+					case 405: // Método no permitido / IP bloqueada
+						console.log("🚫 Error 405: Posible bloqueo temporal de IP");
+						console.log("⏰ Esperando 60 segundos antes de reconectar...");
+						setTimeout(startBot, 60000); // 1 minuto
+						break;
 					case DisconnectReason.badSession:
 						console.log("🔧 Sesión corrupta, limpiando datos...");
-						// Opcional: limpiar auth_info y reiniciar
+						console.log("🗑️ Elimina ./auth_info manualmente y reinicia");
 						break;
 					case DisconnectReason.connectionClosed:
 						console.log("🔄 Conexión cerrada, reconectando...");
-						setTimeout(startBot, 3000);
+						setTimeout(startBot, 30000); // 30 segundos
 						break;
 					case DisconnectReason.connectionLost:
 						console.log("📡 Conexión perdida, reconectando...");
-						setTimeout(startBot, 5000);
+						setTimeout(startBot, 45000); // 45 segundos
 						break;
 					case DisconnectReason.connectionReplaced:
 						console.log("🔄 Conexión reemplazada, reconectando...");
-						setTimeout(startBot, 3000);
+						setTimeout(startBot, 30000);
 						break;
 					case DisconnectReason.loggedOut:
 						console.log("🚫 Sesión cerrada permanentemente.");
@@ -207,15 +212,15 @@ async function startBot() {
 						break;
 					case DisconnectReason.restartRequired:
 						console.log("🔄 Reinicio requerido...");
-						setTimeout(startBot, 2000);
+						setTimeout(startBot, 30000);
 						break;
 					case DisconnectReason.timedOut:
 						console.log("⏰ Timeout, reconectando...");
-						setTimeout(startBot, 5000);
+						setTimeout(startBot, 60000); // 1 minuto
 						break;
 					default:
-						console.log("🔄 Reconectando en 5 segundos...");
-						setTimeout(startBot, 5000);
+						console.log("🔄 Reconectando en 30 segundos...");
+						setTimeout(startBot, 30000);
 						break;
 				}
 			}

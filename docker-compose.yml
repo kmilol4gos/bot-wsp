@@ -9,5 +9,6 @@ services:
     tty: true
     stdin_open: true # Permite interacción con el terminal
     restart: unless-stopped # Reiniciar automáticamente si hay errores
+    network_mode: host # Usar la red del host para evitar problemas de NAT
     environment:
       - NODE_ENV=production
