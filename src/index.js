@@ -1,29 +1,18 @@
 /**
- * botconst {
-  default: makeWASocket,
-  useMultiFileAuthState,
-  DisconnectReason,
-  Browsers,
-} = require("@whiskeysockets/baileys"); // v6.6.0
-const qrcode = require("qrcode-terminal");
-const fs = require("fs");
-
-// -----------------------
-// FUNCIONES DE MENSAJES
-// -----------------------ot de WhatsApp usando Baileys v6.6.0 (no requiere forzar `version`).
+ * Bot de WhatsApp usando Baileys v6.6.0 (no requiere forzar `version`).
  * Incluye:
  * 1. Persistencia en ./auth_info
  * 2. Mostrar QR con printQRInTerminal en la primera ejecución
  * 3. Manejo de DisconnectReason y errores de stream (515)
  */
-
 const {
 	default: makeWASocket,
 	useMultiFileAuthState,
 	DisconnectReason,
 	Browsers,
-} = require("@whiskeysockets/baileys"); // v6.6.0
-const qrcode = require("qrcode-terminal");
+} = require("@whiskeysockets/baileys");
+const qrcode = require("qrcode");
+const fs = require("fs");
 
 // -----------------------
 // FUNCIONES DE MENSAJES
@@ -161,7 +150,6 @@ async function startBot() {
 	// 2. Crear el socket sin `version` (Baileys v6.6.0 lo maneja internamente)
 	const sock = makeWASocket({
 		auth: state,
-		printQRInTerminal: true, // Mostrar QR la primera vez
 		browser: Browsers.appropriate("Optibot-Baileys"), // Usar un navegador apropiado para el SO
 		// syncFullHistory: true, // Opcional, si necesita recuperar chats previos
 	});
@@ -176,7 +164,17 @@ async function startBot() {
 		// 4.1. Si hay QR, imprimir en consola
 		if (qr) {
 			console.log("⏳ Escanea este código QR con tu WhatsApp (MD):");
-			qrcode.generate(qr, { small: true });
+			qrcode.toString(
+				qr,
+				{ type: "terminal", small: true },
+				(err, qrString) => {
+					if (err) {
+						console.error("Error generando QR:", err);
+					} else {
+						console.log(qrString);
+					}
+				}
+			);
 		}
 
 		// 4.2. Si la conexión se cierra
