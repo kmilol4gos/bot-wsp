@@ -1,53 +1,19 @@
 /**
- * bot.js
- *
  * Bot de WhatsApp usando Baileys v6.6.0 (no requiere forzar `version`).
  * Incluye:
  * 1. Persistencia en ./auth_info
- * 2. Mostrar QR con printQRInTerminal en la p		// 5. Manejo de eventos de conexión
-		sock.ev.on("connection.update", (update) => {
-			const { connection, lastDisconnect, qr } = update;
-
-			// 5.1. Si hay QR, mostrarlo inmediatamente
-			if (qr) {
-				console.log("\n" + "=".repeat(50));
-				console.log("⏳ CÓDIGO QR PARA WHATSAPP:");
-				console.log("=".repeat(50));
-				qrcode.generate(qr, { small: true });
-				console.log("=".repeat(50));
-				console.log("📱 Instrucciones:");
-				console.log("1. Abre WhatsApp en tu teléfono");
-				console.log("2. Ve a 'Dispositivos vinculados'");
-				console.log("3. Selecciona 'Vincular dispositivo'");
-				console.log("4. Escanea el código QR de arriba");
-				console.log("=".repeat(50) + "\n");
-			}
-
-			// 5.2. Si la conexión se cierra
-			if (connection === "close") {
-				const statusCode = lastDisconnect?.error?.output?.statusCode;
-				console.log("❌ Conexión cerrada. Código de status:", statusCode);
-
-				// Evitar bucles infinitos - limitar reconexiones
-				if (statusCode === 428 || statusCode === 515) {
-					console.log("🔧 Error de conexión, limpiando sesión...");
-					const fs = require('fs');
-					fs.rmSync('./auth_info', { recursive: true, force: true });
-					console.log("🔄 Reiniciando para mostrar nuevo QR...");
-					setTimeout(startBot, 3000);
-					return;
-				} * 3. Manejo de DisconnectReason y errores de stream (515)
+ * 2. Mostrar QR con printQRInTerminal en la primera ejecución
+ * 3. Manejo de DisconnectReason y errores de stream (515)
  */
-
 const {
 	default: makeWASocket,
 	useMultiFileAuthState,
 	DisconnectReason,
 	Browsers,
-} = require("@whiskeysockets/baileys"); // v6.6.0
-const qrcode = require("qrcode-terminal");
+} = require("@whiskeysockets/baileys");
+const qrcode = require("qrcode");
+const fs = require("fs");
 
-const diasSabado = "9 y Sábado 30 agosto";
 // -----------------------
 // FUNCIONES DE MENSAJES
 // -----------------------
@@ -104,8 +70,8 @@ Entre semana:
 - Mañana: 10:00 AM a 2:00 PM
 - Tarde: 3:00 PM a 7:00 PM
 
-Días especiales de Agosto:
-- Sábado ${diasSabado}
+Días especiales de Junio:
+- Sábado 14 y Sábado 28
 - Horario: 10:00 AM a 2:00 PM
 
 Si necesita otra información, puede escribir otro número de las opciones anteriores.`;
@@ -121,10 +87,12 @@ Horarios para chequeos:
 - Lunes a Viernes:
   Mañana: 11:30 AM a 1:30 PM
   Tarde: 3:30 PM a 6:00 PM
-- Sábados ${diasSabado}:
+- Sábados 14 y 28 de Junio:
   De 10:00 AM a 2:00 PM
 
-Para agendar su hora puede escribirnos por este mismo WhatsApp (solo atendemos agendas por WhatsApp).
+Para agendar su hora puede:
+1. Escribirnos por este mismo WhatsApp
+2. Llamarnos por teléfono
 
 ¿Desea agendar ahora? Responda "SI" y le atenderemos personalmente.`;
 	await sock.sendMessage(sender, { text: replyMessage });
@@ -176,180 +144,91 @@ Recuerde que puede escribir cualquier número del 1 al 4 si necesita más inform
 // FUNCIÓN PRINCIPAL DE INICIALIZACIÓN
 // ----------------------------------
 async function startBot() {
-	try {
-		// 1. Verificar si existe directorio de autenticación
-		const fs = require("fs");
-		const authDirExists = fs.existsSync("./auth_info");
-		const hasCredentials =
-			authDirExists && fs.existsSync("./auth_info/creds.json");
+	// 1. Carga o crea estado de autenticación en ./auth_info
+	const { state, saveCreds } = await useMultiFileAuthState("./auth_info");
 
-		if (!authDirExists || !hasCredentials) {
-			console.log(
-				"🆕 No hay sesión guardada, limpiando y preparando para mostrar QR..."
+	// 2. Crear el socket sin `version` (Baileys v6.6.0 lo maneja internamente)
+	const sock = makeWASocket({
+		auth: state,
+		browser: Browsers.appropriate("Optibot-Baileys"), // Usar un navegador apropiado para el SO
+		// syncFullHistory: true, // Opcional, si necesita recuperar chats previos
+	});
+
+	// 3. Guardar credenciales cada vez que Baileys las actualice
+	sock.ev.on("creds.update", saveCreds);
+
+	// 4. Manejo de eventos de conexión
+	sock.ev.on("connection.update", (update) => {
+		const { connection, lastDisconnect, qr } = update;
+
+		// 4.1. Si hay QR, imprimir en consola
+		if (qr) {
+			console.log("⏳ Escanea este código QR con tu WhatsApp (MD):");
+			qrcode.toString(
+				qr,
+				{ type: "terminal", small: true },
+				(err, qrString) => {
+					if (err) {
+						console.error("Error generando QR:", err);
+					} else {
+						console.log(qrString);
+					}
+				}
 			);
-			// Limpiar cualquier archivo corrupto
-			if (authDirExists) {
-				fs.rmSync("./auth_info", { recursive: true, force: true });
-			}
-		} else {
-			console.log("📱 Intentando conectar con sesión existente...");
 		}
 
-		// 2. Carga o crea estado de autenticación en ./auth_info
-		const { state, saveCreds } = await useMultiFileAuthState("./auth_info");
+		// 4.2. Si la conexión se cierra
+		if (connection === "close") {
+			const statusCode = lastDisconnect?.error?.output?.statusCode;
+			console.log("❌ Conexión cerrada. Código de status:", statusCode);
+			console.log(
+				"Detalle del último error:",
+				JSON.stringify(lastDisconnect, null, 2)
+			);
 
-		// 3. Crear el socket con configuración más conservadora
-		const sock = makeWASocket({
-			auth: state,
-			printQRInTerminal: true, // Siempre mostrar QR cuando sea necesario
-			browser: Browsers.ubuntu("Chrome"), // Cambiar a Ubuntu Chrome
-			connectTimeoutMs: 60000, // Reducir timeout para evitar bucles largos
-			defaultQueryTimeoutMs: 60000,
-			markOnlineOnConnect: false, // No marcar como online inmediatamente
-			syncFullHistory: false, // Evitar sincronizar historial completo
-			generateHighQualityLinkPreview: false, // Reducir carga
-			getMessage: async () => undefined, // Evitar recuperar mensajes perdidos
-		});
-
-		// 4. Guardar credenciales cada vez que Baileys las actualice
-		sock.ev.on("creds.update", saveCreds);
-
-		// 4. Manejo de eventos de conexión
-		sock.ev.on("connection.update", (update) => {
-			const { connection, lastDisconnect, qr } = update;
-
-			// 4.1. Si hay QR, mostrarlo siempre
-			if (qr) {
-				console.log("⏳ Escanea este código QR con tu WhatsApp:");
-				qrcode.generate(qr, { small: true });
+			// Si no es logout (401), reintentar en 5 s
+			if (statusCode !== DisconnectReason.loggedOut) {
+				console.log("🔄 Reconectando en 5 segundos...");
+				setTimeout(startBot, 5000);
+			} else {
+				console.log("🚫 Sesión cerrada permanentemente (loggedOut).");
 				console.log(
-					"� Abre WhatsApp en tu teléfono → Dispositivos vinculados → Vincular dispositivo"
+					"   - Para obtener un nuevo QR, elimina ./auth_info y reinicia el bot."
 				);
 			}
-
-			// 4.2. Si la conexión se cierra
-			if (connection === "close") {
-				const statusCode = lastDisconnect?.error?.output?.statusCode;
-				console.log("❌ Conexión cerrada. Código de status:", statusCode);
-
-				// Manejar diferentes tipos de desconexión
-				switch (statusCode) {
-					case 401: // No autorizado - necesita nuevo QR
-						console.log("🔑 Error 401: Sesión no autorizada");
-						console.log("🗑️ Limpiando sesión para generar nuevo QR...");
-						const fs = require("fs");
-						fs.rmSync("./auth_info", { recursive: true, force: true });
-						setTimeout(startBot, 3000);
-						break;
-					case 403: // Prohibido
-						console.log("🚫 Error 403: Acceso prohibido");
-						console.log("⏰ Esperando 30 segundos antes de reconectar...");
-						setTimeout(startBot, 30000);
-						break;
-					case 405: // Método no permitido / IP bloqueada
-						console.log("🚫 Error 405: Posible bloqueo temporal de IP");
-						console.log("⏰ Esperando 60 segundos antes de reconectar...");
-						setTimeout(startBot, 60000);
-						break;
-					case DisconnectReason.badSession:
-						console.log("🔧 Sesión corrupta, limpiando datos...");
-						require("fs").rmSync("./auth_info", {
-							recursive: true,
-							force: true,
-						});
-						setTimeout(startBot, 3000);
-						break;
-					case DisconnectReason.loggedOut:
-						console.log("� Sesión cerrada permanentemente.");
-						require("fs").rmSync("./auth_info", {
-							recursive: true,
-							force: true,
-						});
-						setTimeout(startBot, 3000);
-						break;
-					case DisconnectReason.connectionClosed:
-						console.log("🔄 Conexión cerrada, reconectando...");
-						setTimeout(startBot, 15000);
-						break;
-					case DisconnectReason.connectionLost:
-						console.log("� Conexión perdida, reconectando...");
-						setTimeout(startBot, 20000);
-						break;
-					case DisconnectReason.timedOut:
-						console.log("⏰ Timeout, reconectando...");
-						setTimeout(startBot, 30000);
-						break;
-					default:
-						console.log(
-							`🔄 Error desconocido (${statusCode}), reconectando...`
-						);
-						setTimeout(startBot, 15000);
-						break;
-				}
-			}
-
-			// 5.3. Si la conexión se abrió correctamente
-			if (connection === "open") {
-				console.log("✅ Conectado exitosamente a WhatsApp");
-				console.log("📞 Bot listo para recibir mensajes");
-			}
-
-			// 5.4. Estado de conectando
-			if (connection === "connecting") {
-				console.log("🔄 Conectando a WhatsApp...");
-			}
-		});
-
-		// 6. Manejo mejorado de errores de stream
-		sock.ws?.on("CB:stream:error", (err) => {
-			console.error("⚠️ Error de stream:", err);
-			if (err?.code === "515" || err?.code === "503") {
-				console.log("🚨 Error de stream, limpiando sesión...");
-				const fs = require("fs");
-				fs.rmSync("./auth_info", { recursive: true, force: true });
-				setTimeout(startBot, 5000);
-			}
-		});
-
-		// 7. Escuchar mensajes entrantes con mejor manejo de errores
-		sock.ev.on("messages.upsert", async (m) => {
-			try {
-				const msg = m.messages[0];
-				if (!msg.message || msg.key.fromMe) return;
-
-				const sender = msg.key.remoteJid;
-				const messageContent =
-					msg.message.conversation ||
-					msg.message.extendedTextMessage?.text ||
-					msg.message.imageMessage?.caption ||
-					msg.message.videoMessage?.caption;
-
-				if (messageContent) {
-					console.log(`📥 Mensaje de ${sender}: ${messageContent}`);
-					await handleMessage(sock, sender, messageContent);
-				}
-			} catch (error) {
-				console.error("🚧 Error manejando mensaje:", error);
-
-				// Si es error de desencriptación, continuar sin romper el bot
-				if (
-					error.name === "PreKeyError" ||
-					error.message?.includes("decrypt")
-				) {
-					console.log("⚠️ Mensaje no pudo ser desencriptado, continuando...");
-				}
-			}
-		});
-	} catch (error) {
-		console.error("💥 Error fatal iniciando bot:", error);
-		// En caso de error fatal, limpiar sesión y reiniciar
-		const fs = require("fs");
-		if (fs.existsSync("./auth_info")) {
-			fs.rmSync("./auth_info", { recursive: true, force: true });
 		}
-		console.log("🔄 Reintentando en 10 segundos...");
-		setTimeout(startBot, 10000);
-	}
+
+		// 4.3. Si la conexión se abrió correctamente
+		if (connection === "open") {
+			console.log("✅ Conectado exitosamente a WhatsApp");
+		}
+	});
+
+	// 5. Capturar errores de stream (por ejemplo, “515”)
+	sock.ws.on("CB:stream:error", (err) => {
+		console.error("⚠️ Error de stream:", err);
+		if (err?.code === "515") {
+			console.log("🚨 Error 515: reiniciando conexión en 5 s...");
+			setTimeout(startBot, 5000);
+		}
+	});
+
+	// 6. Escuchar mensajes entrantes
+	sock.ev.on("messages.upsert", async (m) => {
+		try {
+			const msg = m.messages[0];
+			if (!msg.message || msg.key.fromMe) return;
+
+			const sender = msg.key.remoteJid;
+			const messageContent =
+				msg.message.conversation || msg.message.extendedTextMessage?.text;
+			if (messageContent) {
+				await handleMessage(sock, sender, messageContent);
+			}
+		} catch (error) {
+			console.error("🚧 Error manejando mensaje:", error);
+		}
+	});
 }
 
 // 7. Ejecutar el bot
