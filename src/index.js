@@ -157,16 +157,21 @@ function displayQR(qr) {
 		"================================================================"
 	);
 
-	// Método 1: Intentar qrcode-terminal
-	if (qrTerminal) {
-		try {
-			qrTerminal.generate(qr, { small: true });
-		} catch (e) {
-			console.log("Error con qrcode-terminal, probando método alternativo...");
-		}
+	// Método 1: Generar URL de imagen QR (para AWS y navegadores)
+	try {
+		const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(
+			qr
+		)}`;
+		console.log("🖼️  CÓDIGO QR COMO IMAGEN (copia esta URL en tu navegador):");
+		console.log(qrImageUrl);
+		console.log(
+			"================================================================"
+		);
+	} catch (e) {
+		console.log("Error generando URL de QR:", e);
 	}
 
-	// Método 2: Fallback con qrcode usando caracteres ASCII
+	// Método 2: Intentar mostrar QR en terminal (puede no funcionar en AWS)
 	try {
 		qrcode.toString(
 			qr,
@@ -177,42 +182,37 @@ function displayQR(qr) {
 			},
 			(err, qrString) => {
 				if (err) {
-					console.error("Error generando QR:", err);
-					// Método 3: Mostrar como URL si todo falla
-					console.log(
-						"================================================================"
-					);
-					console.log("QR no disponible. Usa este enlace para conectar:");
-					console.log("whatsapp://qr/" + Buffer.from(qr).toString("base64"));
-					console.log(
-						"================================================================"
-					);
+					console.error("Error generando QR en terminal:", err);
 				} else {
+					console.log("📱 QR en texto (puede no verse bien en servidores):");
 					console.log(qrString);
 				}
+				console.log(
+					"================================================================"
+				);
+				console.log("📱 Si no puedes ver el QR arriba, usa la URL de imagen");
+				console.log("📱 Instrucciones:");
+				console.log("   1. Copia la URL de imagen QR");
+				console.log("   2. Ábrela en tu navegador");
+				console.log("   3. Escanea el QR desde tu teléfono con WhatsApp");
+				console.log(
+					"   4. WhatsApp > Dispositivos vinculados > Vincular dispositivo"
+				);
+				console.log(
+					"================================================================"
+				);
 			}
 		);
 	} catch (e) {
-		console.log("Error con todos los métodos de QR:", e);
+		console.log("Error con QR en terminal:", e);
 		console.log(
 			"================================================================"
 		);
-		console.log("QR DATA:", qr);
+		console.log("⚠️ Usa la URL de imagen arriba para ver el QR");
 		console.log(
 			"================================================================"
 		);
 	}
-
-	console.log(
-		"================================================================"
-	);
-	console.log(
-		"📱 Abre WhatsApp > Menú (⋮) > Dispositivos vinculados > Vincular dispositivo"
-	);
-	console.log("📷 Escanea el código QR de arriba");
-	console.log(
-		"================================================================"
-	);
 }
 
 // ----------------------------------
