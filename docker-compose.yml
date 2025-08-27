@@ -5,6 +5,7 @@ services:
     container_name: whatsapp-bot
     volumes:
       - ./auth_info:/usr/src/app/auth_info:rw # Permisos de escritura explícitos
+      - ./logs:/usr/src/app/logs:rw # Logs
     command: npm start
     tty: true
     stdin_open: true # Permite interacción con el terminal
@@ -12,3 +13,6 @@ services:
     network_mode: host # Usar la red del host para evitar problemas de NAT
     environment:
       - NODE_ENV=production
+      - LANG=C.UTF-8
+      - LC_ALL=C.UTF-8
+      - TERM=xterm-256color

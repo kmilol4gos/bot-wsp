@@ -2,7 +2,7 @@
  * Bot de WhatsApp usando Baileys v6.6.0 (no requiere forzar `version`).
  * Incluye:
  * 1. Persistencia en ./auth_info
- * 2. Mostrar QR con printQRInTerminal en la primera ejecución
+ * 2. Mostrar QR con múltiples métodos para máxima compatibilidad
  * 3. Manejo de DisconnectReason y errores de stream (515)
  */
 const {
@@ -13,6 +13,14 @@ const {
 } = require("@whiskeysockets/baileys");
 const qrcode = require("qrcode");
 const fs = require("fs");
+
+// Intentar cargar qrcode-terminal, si no está disponible usar fallback
+let qrTerminal;
+try {
+	qrTerminal = require("qrcode-terminal");
+} catch (e) {
+	console.log("qrcode-terminal no disponible, usando método alternativo");
+}
 
 // -----------------------
 // FUNCIONES DE MENSAJES
@@ -70,8 +78,8 @@ Entre semana:
 - Mañana: 10:00 AM a 2:00 PM
 - Tarde: 3:00 PM a 7:00 PM
 
-Días especiales de Junio:
-- Sábado 14 y Sábado 28
+Días especiales de Agosto:
+- Sábado 9, Sábado 23 y Sábado 30
 - Horario: 10:00 AM a 2:00 PM
 
 Si necesita otra información, puede escribir otro número de las opciones anteriores.`;
@@ -87,14 +95,14 @@ Horarios para chequeos:
 - Lunes a Viernes:
   Mañana: 11:30 AM a 1:30 PM
   Tarde: 3:30 PM a 6:00 PM
-- Sábados 14 y 28 de Junio:
+- Sábados 9, 23 y 30 de Agosto:
   De 10:00 AM a 2:00 PM
 
-Para agendar su hora puede:
-1. Escribirnos por este mismo WhatsApp
-2. Llamarnos por teléfono
+Para agendar su hora:
+✅ Solo se acepta agendamiento por WhatsApp
+❌ No aceptamos agendamiento por llamadas telefónicas
 
-¿Desea agendar ahora? Responda "SI" y le atenderemos personalmente.`;
+¿Desea agendar ahora? Responda "SI" y le atenderemos personalmente por este mismo chat.`;
 	await sock.sendMessage(sender, { text: replyMessage });
 }
 
@@ -140,6 +148,51 @@ Recuerde que puede escribir cualquier número del 1 al 4 si necesita más inform
 	await sock.sendMessage(sender, { text: replyMessage });
 }
 
+// Función para mostrar QR con múltiples métodos
+function displayQR(qr) {
+	console.log("⏳ Escanea este código QR con tu WhatsApp (MD):");
+	console.log("================================================================");
+	
+	// Método 1: Intentar qrcode-terminal
+	if (qrTerminal) {
+		try {
+			qrTerminal.generate(qr, {small: true});
+		} catch (e) {
+			console.log("Error con qrcode-terminal, probando método alternativo...");
+		}
+	}
+	
+	// Método 2: Fallback con qrcode usando caracteres ASCII
+	try {
+		qrcode.toString(qr, { 
+			type: 'terminal', 
+			small: true,
+			errorCorrectionLevel: 'M'
+		}, (err, qrString) => {
+			if (err) {
+				console.error("Error generando QR:", err);
+				// Método 3: Mostrar como URL si todo falla
+				console.log("================================================================");
+				console.log("QR no disponible. Usa este enlace para conectar:");
+				console.log("whatsapp://qr/" + Buffer.from(qr).toString('base64'));
+				console.log("================================================================");
+			} else {
+				console.log(qrString);
+			}
+		});
+	} catch (e) {
+		console.log("Error con todos los métodos de QR:", e);
+		console.log("================================================================");
+		console.log("QR DATA:", qr);
+		console.log("================================================================");
+	}
+	
+	console.log("================================================================");
+	console.log("📱 Abre WhatsApp > Menú (⋮) > Dispositivos vinculados > Vincular dispositivo");
+	console.log("📷 Escanea el código QR de arriba");
+	console.log("================================================================");
+}
+
 // ----------------------------------
 // FUNCIÓN PRINCIPAL DE INICIALIZACIÓN
 // ----------------------------------
@@ -161,20 +214,9 @@ async function startBot() {
 	sock.ev.on("connection.update", (update) => {
 		const { connection, lastDisconnect, qr } = update;
 
-		// 4.1. Si hay QR, imprimir en consola
+		// 4.1. Si hay QR, usar función mejorada
 		if (qr) {
-			console.log("⏳ Escanea este código QR con tu WhatsApp (MD):");
-			qrcode.toString(
-				qr,
-				{ type: "terminal", small: true },
-				(err, qrString) => {
-					if (err) {
-						console.error("Error generando QR:", err);
-					} else {
-						console.log(qrString);
-					}
-				}
-			);
+			displayQR(qr);
 		}
 
 		// 4.2. Si la conexión se cierra
@@ -204,7 +246,7 @@ async function startBot() {
 		}
 	});
 
-	// 5. Capturar errores de stream (por ejemplo, “515”)
+	// 5. Capturar errores de stream (por ejemplo, "515")
 	sock.ws.on("CB:stream:error", (err) => {
 		console.error("⚠️ Error de stream:", err);
 		if (err?.code === "515") {
