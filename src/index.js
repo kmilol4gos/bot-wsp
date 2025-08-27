@@ -60,6 +60,8 @@ async function sendWelcomeMessage(sock, sender) {
 
 Soy su asistente virtual y estoy aquí para ayudarle. 
 
+🚨 *AVISO IMPORTANTE:* Estaremos cerrados el jueves 5 y viernes 6 de Septiembre. 
+
 Para obtener información, por favor escriba el NÚMERO de la opción que desea consultar:
 
 1️⃣  Para conocer nuestros *HORARIOS DE ATENCIÓN*
@@ -151,46 +153,66 @@ Recuerde que puede escribir cualquier número del 1 al 4 si necesita más inform
 // Función para mostrar QR con múltiples métodos
 function displayQR(qr) {
 	console.log("⏳ Escanea este código QR con tu WhatsApp (MD):");
-	console.log("================================================================");
-	
+	console.log(
+		"================================================================"
+	);
+
 	// Método 1: Intentar qrcode-terminal
 	if (qrTerminal) {
 		try {
-			qrTerminal.generate(qr, {small: true});
+			qrTerminal.generate(qr, { small: true });
 		} catch (e) {
 			console.log("Error con qrcode-terminal, probando método alternativo...");
 		}
 	}
-	
+
 	// Método 2: Fallback con qrcode usando caracteres ASCII
 	try {
-		qrcode.toString(qr, { 
-			type: 'terminal', 
-			small: true,
-			errorCorrectionLevel: 'M'
-		}, (err, qrString) => {
-			if (err) {
-				console.error("Error generando QR:", err);
-				// Método 3: Mostrar como URL si todo falla
-				console.log("================================================================");
-				console.log("QR no disponible. Usa este enlace para conectar:");
-				console.log("whatsapp://qr/" + Buffer.from(qr).toString('base64'));
-				console.log("================================================================");
-			} else {
-				console.log(qrString);
+		qrcode.toString(
+			qr,
+			{
+				type: "terminal",
+				small: true,
+				errorCorrectionLevel: "M",
+			},
+			(err, qrString) => {
+				if (err) {
+					console.error("Error generando QR:", err);
+					// Método 3: Mostrar como URL si todo falla
+					console.log(
+						"================================================================"
+					);
+					console.log("QR no disponible. Usa este enlace para conectar:");
+					console.log("whatsapp://qr/" + Buffer.from(qr).toString("base64"));
+					console.log(
+						"================================================================"
+					);
+				} else {
+					console.log(qrString);
+				}
 			}
-		});
+		);
 	} catch (e) {
 		console.log("Error con todos los métodos de QR:", e);
-		console.log("================================================================");
+		console.log(
+			"================================================================"
+		);
 		console.log("QR DATA:", qr);
-		console.log("================================================================");
+		console.log(
+			"================================================================"
+		);
 	}
-	
-	console.log("================================================================");
-	console.log("📱 Abre WhatsApp > Menú (⋮) > Dispositivos vinculados > Vincular dispositivo");
+
+	console.log(
+		"================================================================"
+	);
+	console.log(
+		"📱 Abre WhatsApp > Menú (⋮) > Dispositivos vinculados > Vincular dispositivo"
+	);
 	console.log("📷 Escanea el código QR de arriba");
-	console.log("================================================================");
+	console.log(
+		"================================================================"
+	);
 }
 
 // ----------------------------------
