@@ -60,7 +60,8 @@ async function sendWelcomeMessage(sock, sender) {
 
 Soy su asistente virtual y estoy aquí para ayudarle. 
 
-🚨 *AVISO IMPORTANTE:* Estaremos cerrados el jueves 5 y viernes 6 de Septiembre. 
+🚨 *AVISO IMPORTANTE:* Estaremos cerrados el jueves 4, viernes 5 y sábado 6 de Septiembre.
+✅ *DÍAS ESPECIALES:* Abriremos los sábados 13 y 27 de Septiembre.
 
 Para obtener información, por favor escriba el NÚMERO de la opción que desea consultar:
 
@@ -80,8 +81,10 @@ Entre semana:
 - Mañana: 10:00 AM a 2:00 PM
 - Tarde: 3:00 PM a 7:00 PM
 
-Días especiales de Agosto:
-- Sábado 9, Sábado 23 y Sábado 30
+🚨 *CERRADO:* Jueves 4, Viernes 5 y Sábado 6 de Septiembre
+
+Días especiales de Septiembre:
+- Sábado 13 y Sábado 27
 - Horario: 10:00 AM a 2:00 PM
 
 Si necesita otra información, puede escribir otro número de las opciones anteriores.`;
@@ -97,14 +100,12 @@ Horarios para chequeos:
 - Lunes a Viernes:
   Mañana: 11:30 AM a 1:30 PM
   Tarde: 3:30 PM a 6:00 PM
-- Sábados 9, 23 y 30 de Agosto:
+- Sábado 13 y Sábado 27 de Septiembre:
   De 10:00 AM a 2:00 PM
 
 Para agendar su hora:
 ✅ Solo se acepta agendamiento por WhatsApp
-❌ No aceptamos agendamiento por llamadas telefónicas
-
-¿Desea agendar ahora? Responda "SI" y le atenderemos personalmente por este mismo chat.`;
+❌ No aceptamos agendamiento por llamadas telefónicas`;
 	await sock.sendMessage(sender, { text: replyMessage });
 }
 
@@ -120,8 +121,7 @@ Punto de referencia:
 
 Para ver el mapa en su teléfono, haga clic en este enlace:
 https://maps.app.goo.gl/apFHXEmwkMx8tGb18
-
-¿Necesita más indicaciones? Responda "SI" y le ayudaremos personalmente.`;
+`;
 	await sock.sendMessage(sender, { text: replyMessage });
 }
 
