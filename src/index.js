@@ -81,10 +81,8 @@ Entre semana:
 - Mañana: 10:00 AM a 2:00 PM
 - Tarde: 3:00 PM a 7:00 PM
 
-🚨 *CERRADO:* Jueves 4, Viernes 5 y Sábado 6 de Septiembre
-
-Días especiales de Septiembre:
-- Sábado 13 y Sábado 27
+Días especiales de Octubre:
+- Sábado 11 y Sábado 25
 - Horario: 10:00 AM a 2:00 PM
 
 Si necesita otra información, puede escribir otro número de las opciones anteriores.`;
@@ -100,7 +98,7 @@ Horarios para chequeos:
 - Lunes a Viernes:
   Mañana: 11:30 AM a 1:30 PM
   Tarde: 3:30 PM a 6:00 PM
-- Sábado 13 y Sábado 27 de Septiembre:
+- Sábado 11 y Sábado 25 de Octubre:
   De 10:00 AM a 2:00 PM
 
 Para agendar su hora:
