@@ -60,8 +60,7 @@ async function sendWelcomeMessage(sock, sender) {
 
 Soy su asistente virtual y estoy aquí para ayudarle. 
 
-🚨 *AVISO IMPORTANTE:* Estaremos cerrados el jueves 4, viernes 5 y sábado 6 de Septiembre.
-✅ *DÍAS ESPECIALES:* Abriremos los sábados 13 y 27 de Septiembre.
+✅ *DÍAS ESPECIALES:* Abriremos los sábados 11 y 25 de Septiembre.
 
 Para obtener información, por favor escriba el NÚMERO de la opción que desea consultar:
 
