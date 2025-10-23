@@ -25,7 +25,7 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 
 # Instala las dependencias (solo producción)
-RUN npm ci --only=production && \
+RUN npm install --omit=dev && \
     npm cache clean --force
 
 # Copia el código fuente
@@ -45,5 +45,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 # Expone el puerto si usas el servidor HTTP
 EXPOSE 3000
 
-# Comando para ejecutar la aplicación BuilderBot
-CMD ["node", "src/app.js"]
+# Comando para ejecutar la aplicación con supervisor
+CMD ["node", "src/supervisor.js"]

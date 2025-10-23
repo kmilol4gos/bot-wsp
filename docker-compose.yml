@@ -1,7 +1,6 @@
-version: "3.8"
 services:
   whatsapp-bot:
-    build:
+    build: 
       context: .
       dockerfile: Dockerfile
     container_name: whatsapp-bot
@@ -19,7 +18,8 @@ services:
       - LC_ALL=C.UTF-8
       - TERM=xterm-256color
       - PORT=3000
-      - ENABLE_HTTP=false # Desactivar HTTP si solo quieres WhatsApp
+      - ENABLE_HTTP=false
+      - TZ=America/Santiago
     logging:
       driver: "json-file"
       options:
