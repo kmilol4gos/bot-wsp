@@ -1,0 +1,55 @@
+# Archivo .dockerignore para optimizar la imagen Docker
+
+# Dependencias de Node
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+
+# Archivos de sesión de WhatsApp (se crean en runtime)
+auth_info/
+
+# Logs
+logs/
+*.log
+
+# Variables de entorno
+.env
+.env.local
+.env.*.local
+
+# Archivos de sistema
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Docker
+docker-compose.yml
+Dockerfile
+.dockerignore
+
+# Documentación (opcional, comentar si quieres incluir)
+README.md
+README_BUILDERBOT.md
+QUICKSTART.md
+ARCHITECTURE.md
+fix-405.md
+
+# Test
+src/test-flows.js

@@ -1,18 +1,35 @@
 version: "3.8"
 services:
   whatsapp-bot:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: whatsapp-bot
     volumes:
       - ./auth_info:/usr/src/app/auth_info:rw # Permisos de escritura explícitos
-      - ./logs:/usr/src/app/logs:rw # Logs
-    command: npm start
+      - ./logs:/usr/src/app/logs:rw # Logs (opcional)
+    ports:
+      - "3000:3000" # Mapea puerto para HTTP API
     tty: true
     stdin_open: true # Permite interacción con el terminal
     restart: unless-stopped # Reiniciar automáticamente si hay errores
-    network_mode: host # Usar la red del host para evitar problemas de NAT
     environment:
       - NODE_ENV=production
       - LANG=C.UTF-8
       - LC_ALL=C.UTF-8
       - TERM=xterm-256color
+      - PORT=3000
+      - ENABLE_HTTP=false # Desactivar HTTP si solo quieres WhatsApp
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 256M

@@ -1,0 +1,101 @@
+/**
+ * Bot de WhatsApp - Arquitectura inspirada en BuilderBot
+ * Implementación con Baileys + API HTTP
+ *
+ * Características:
+ * - Sistema de flujos modulares con addKeyword y addAnswer
+ * - Gestión de estado por usuario
+ * - Callbacks y acciones personalizadas
+ * - Delays y mensajes consecutivos
+ * - API HTTP para enviar mensajes
+ * - Arquitectura limpia y escalable
+ */
+
+const BaileysProvider = require("./provider/baileys.provider");
+const BotCore = require("./core/bot");
+const { createFlow } = require("./core/flow");
+const HttpServer = require("./server/http.server");
+
+// Importar todos los flujos
+const welcomeFlow = require("./flows/welcome.flow");
+const hoursFlow = require("./flows/hours.flow");
+const visualCheckFlow = require("./flows/visual-check.flow");
+const locationFlow = require("./flows/location.flow");
+const bankFlow = require("./flows/bank.flow");
+const thanksFlow = require("./flows/thanks.flow");
+
+// Configuración
+const HTTP_PORT = process.env.PORT || 3000;
+const ENABLE_HTTP_SERVER = process.env.ENABLE_HTTP !== "false";
+
+/**
+ * Función principal para iniciar el bot
+ */
+async function main() {
+	console.log("🤖 Iniciando Bot de WhatsApp...");
+	console.log("📦 Arquitectura: BuilderBot + Baileys");
+	console.log(
+		"================================================================"
+	);
+
+	try {
+		// 1. Crear todos los flujos
+		const flows = createFlow([
+			welcomeFlow,
+			hoursFlow,
+			visualCheckFlow,
+			locationFlow,
+			bankFlow,
+			thanksFlow,
+		]);
+
+		console.log(`✅ ${flows.length} flujos cargados correctamente`);
+
+		// 2. Inicializar el proveedor de Baileys
+		const provider = new BaileysProvider();
+
+		// 3. Conectar a WhatsApp
+		await provider.connect((sock) => {
+			console.log(
+				"================================================================"
+			);
+			console.log("🚀 Bot iniciado correctamente");
+			console.log("📱 Esperando mensajes...");
+			console.log(
+				"================================================================"
+			);
+
+			// 4. Crear el core del bot con los flujos
+			const bot = new BotCore(sock, flows);
+
+			// 5. Iniciar el listener de mensajes
+			bot.start();
+
+			// 6. Iniciar servidor HTTP si está habilitado
+			if (ENABLE_HTTP_SERVER) {
+				const httpServer = new HttpServer(bot, HTTP_PORT);
+				httpServer.start();
+			}
+
+			// 7. Exponer la API del bot para uso externo
+			global.bot = bot;
+		});
+	} catch (error) {
+		console.error("❌ Error iniciando el bot:", error);
+		process.exit(1);
+	}
+}
+
+// Manejo de señales para cerrar correctamente
+process.on("SIGINT", () => {
+	console.log("\n👋 Cerrando bot...");
+	process.exit(0);
+});
+
+process.on("SIGTERM", () => {
+	console.log("\n👋 Cerrando bot...");
+	process.exit(0);
+});
+
+// Ejecutar el bot
+main();

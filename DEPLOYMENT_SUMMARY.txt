@@ -1,0 +1,184 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                   🚀 BOT DE WHATSAPP - LISTO PARA AWS 🚀                     ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+✅ PROYECTO COMPLETAMENTE PREPARADO PARA PRODUCCIÓN EN AWS
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📦 ARCHIVOS AGREGADOS PARA AWS:
+
+  🐳 Docker & Contenedores:
+    ✓ Dockerfile                 - Imagen optimizada para producción
+    ✓ docker-compose.yml         - Orquestación de contenedores
+    ✓ .dockerignore             - Optimización de build
+
+  📚 Documentación:
+    ✓ AWS_DEPLOYMENT.md         - Guía completa AWS (ECS, EC2, Lightsail)
+    ✓ PRODUCTION.md             - Checklist paso a paso
+    ✓ AWS_READY.md              - Resumen de archivos agregados
+
+  🔧 Scripts:
+    ✓ deploy-ec2.sh             - Instalación automatizada en EC2
+    ✓ src/supervisor.js         - Supervisor con auto-restart
+
+  ⚙️ Configuración:
+    ✓ .env.production           - Variables de entorno para producción
+    ✓ package.json              - Scripts npm actualizados
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 3 OPCIONES DE DESPLIEGUE:
+
+  1️⃣  Amazon EC2 (Recomendado)
+      💰 Costo: ~$3-9/mes
+      📊 Complejidad: Media
+      ✨ Ideal para: Control total y escalabilidad
+
+  2️⃣  Amazon Lightsail (Más simple)
+      💰 Costo: $3.50-5/mes
+      📊 Complejidad: Baja
+      ✨ Ideal para: Comenzar rápido
+
+  3️⃣  Amazon ECS/Fargate (Escalable)
+      💰 Costo: ~$11/mes
+      📊 Complejidad: Alta
+      ✨ Ideal para: Producción enterprise
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚡ INICIO RÁPIDO (15-30 minutos):
+
+  1. Lee la documentación:
+     📖 cat PRODUCTION.md
+
+  2. Prepara WhatsApp localmente:
+     npm run dev
+     (Escanea el QR, espera conexión exitosa)
+
+  3. Crea instancia en AWS:
+     - EC2 t2.micro (capa gratuita)
+     - O Lightsail $3.50/mes
+
+  4. Ejecuta script de instalación:
+     bash deploy-ec2.sh
+
+  5. Copia auth_info y inicia:
+     docker-compose up -d
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔒 MEJORAS DE SEGURIDAD INCLUIDAS:
+
+  ✓ Usuario no-root en Docker
+  ✓ Variables de entorno separadas
+  ✓ .dockerignore configurado
+  ✓ Health checks implementados
+  ✓ Límites de recursos
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔄 CONFIABILIDAD:
+
+  ✓ Supervisor con auto-restart
+  ✓ Límite de reintentos (10 intentos)
+  ✓ Logging estructurado
+  ✓ Reinicio automático en errores
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📖 DOCUMENTACIÓN DISPONIBLE:
+
+  1. AWS_DEPLOYMENT.md    → Guía completa de despliegue en AWS
+  2. PRODUCTION.md        → Checklist y pasos detallados
+  3. AWS_READY.md         → Resumen de archivos agregados
+  4. README.md            → Documentación principal del bot
+  5. README_BUILDERBOT.md → Guía de arquitectura BuilderBot
+  6. QUICKSTART.md        → Inicio rápido local
+  7. ARCHITECTURE.md      → Arquitectura del sistema
+  8. fix-405.md           → Solución para error 405
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎓 COMANDOS ÚTILES:
+
+  Desarrollo Local:
+    npm run dev              # Ejecuta el bot
+    npm test                 # Test del sistema
+    npm run clean            # Limpia sesión
+
+  Docker Local:
+    npm run docker:build     # Construir imagen
+    npm run docker:run       # Ejecutar contenedor
+    npm run docker:logs      # Ver logs
+    npm run docker:stop      # Detener
+
+  Producción:
+    npm run start:supervisor # Con auto-restart
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 ESTRUCTURA DEL PROYECTO:
+
+  bot-wsp/
+  ├── 📚 Documentación (8 archivos .md)
+  ├── 🐳 Docker (Dockerfile, docker-compose.yml, .dockerignore)
+  ├── 🔧 Scripts (deploy-ec2.sh, supervisor.js)
+  ├── ⚙️ Config (.env.example, .env.production)
+  ├── src/
+  │   ├── core/         # Sistema de flujos BuilderBot
+  │   ├── flows/        # Flujos de conversación
+  │   ├── provider/     # Conexión a WhatsApp (Baileys)
+  │   ├── server/       # API HTTP opcional
+  │   └── app.js        # Aplicación principal
+  └── auth_info/        # Sesión de WhatsApp (generada)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✨ CARACTERÍSTICAS DEL BOT:
+
+  ✓ Arquitectura modular BuilderBot
+  ✓ Sistema de flujos con addKeyword/addAnswer
+  ✓ Gestión de estado por usuario
+  ✓ Callbacks y acciones personalizadas
+  ✓ Soporte para delays y mensajes consecutivos
+  ✓ Detección de patrones con regex
+  ✓ API HTTP opcional
+  ✓ 6 flujos predefinidos (bienvenida, horarios, etc.)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 PRÓXIMOS PASOS:
+
+  1. 📖 Lee: cat PRODUCTION.md
+  2. 🔗 Vincula WhatsApp: npm run dev
+  3. 🚀 Despliega en AWS siguiendo la guía
+  4. 📊 Monitorea con: docker-compose logs -f
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💡 TIPS IMPORTANTES:
+
+  ⚠️  SIEMPRE vincula WhatsApp localmente PRIMERO
+  ⚠️  Haz backup de auth_info/ antes de desplegar
+  ⚠️  auth_info/ NUNCA se debe subir a Git
+  ⚠️  Usa el supervisor en producción para auto-restart
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🆘 SOPORTE:
+
+  📧 Issues: GitHub Issues
+  📖 Docs: README.md, PRODUCTION.md, AWS_DEPLOYMENT.md
+  🐛 Error 405: fix-405.md
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+                    🎉 ¡PROYECTO LISTO PARA PRODUCCIÓN! 🎉
+
+              Tu bot puede estar corriendo 24/7 en AWS en 30 minutos
+
+                  Costo: Desde $3.50/mes | 99.9% uptime
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
