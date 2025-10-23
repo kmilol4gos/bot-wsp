@@ -87,6 +87,7 @@ sudo docker-compose logs -f
 ## 📱 Probar el bot
 
 Envía un mensaje de WhatsApp a tu número con:
+
 - `hola` → Ver menú
 - `1` → Horarios
 - `2` → Chequeo visual

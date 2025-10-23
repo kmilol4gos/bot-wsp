@@ -1,6 +1,6 @@
 services:
   whatsapp-bot:
-    build: 
+    build:
       context: .
       dockerfile: Dockerfile
     container_name: whatsapp-bot
