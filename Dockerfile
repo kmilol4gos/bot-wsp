@@ -5,6 +5,7 @@ FROM node:20-alpine
 RUN apk add --no-cache \
     bash \
     curl \
+    git \
     ca-certificates \
     && rm -rf /var/cache/apk/*
 
