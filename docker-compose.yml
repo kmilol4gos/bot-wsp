@@ -6,7 +6,7 @@ services:
     container_name: whatsapp-bot
     volumes:
       - ./auth_info:/usr/src/app/auth_info:rw # Permisos de escritura explícitos
-      - ./logs:/usr/src/app/logs:rw # Logs (opcional)
+      # logs se mantienen dentro del contenedor, usa: docker-compose logs -f
     ports:
       - "3000:3000" # Mapea puerto para HTTP API
     tty: true
