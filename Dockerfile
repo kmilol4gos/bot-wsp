@@ -1,5 +1,5 @@
-# Usa una imagen más ligera de Node.js con soporte UTF-8
-FROM node:18-alpine
+# Usa una imagen oficial de Node.js con soporte UTF-8
+FROM node:20-alpine
 
 # Instalar paquetes necesarios para producción
 RUN apk add --no-cache \
