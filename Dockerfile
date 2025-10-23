@@ -1,5 +1,5 @@
-# Usa una imagen oficial de Node.js con soporte UTF-8
-FROM node:20-alpine
+# Usa una imagen más ligera de Node.js con soporte UTF-8
+FROM node:18-alpine
 
 # Instalar paquetes necesarios para producción
 RUN apk add --no-cache \
@@ -30,11 +30,12 @@ RUN npm install --omit=dev && \
     npm cache clean --force
 
 # Copia el código fuente
-COPY --chown=nodejs:nodejs . .
+COPY . .
 
-# Crear directorios necesarios con permisos correctos
+# Crear directorios necesarios y dar permisos al usuario nodejs
 RUN mkdir -p auth_info logs && \
-    chown -R nodejs:nodejs /usr/src/app
+    chown -R nodejs:nodejs /usr/src/app && \
+    chmod -R 755 /usr/src/app
 
 # Cambiar a usuario no-root
 USER nodejs
