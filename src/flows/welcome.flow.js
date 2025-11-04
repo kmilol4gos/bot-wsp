@@ -15,7 +15,7 @@ const welcomeFlow = addKeyword([
 		[
 			"Soy su asistente virtual y estoy aquí para ayudarle.",
 			"",
-			"✅ *DÍAS ESPECIALES:* Abriremos los sábados 11 y 25 de Octubre.",
+			"✅ *DÍAS ESPECIALES:* Abriremos los sábados 8 y 22 de Noviembre.",
 			"",
 			"Para obtener información, por favor escriba el NÚMERO de la opción que desea consultar:",
 			"",
