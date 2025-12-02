@@ -13,7 +13,7 @@ const visualCheckFlow = addKeyword(["2"], { sensitive: true }).addAnswer(
 		"- Lunes a Viernes:",
 		"  Mañana: 11:30 AM a 1:30 PM",
 		"  Tarde: 3:30 PM a 6:00 PM",
-		"- Sábado 8 y Sábado 22 de Noviembre:",
+		"- Sábado 13 de Diciembre:",
 		"  De 10:00 AM a 2:00 PM",
 		"",
 	].join("\n")
