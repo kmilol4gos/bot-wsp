@@ -12,9 +12,9 @@ const hoursFlow = addKeyword(["1"], { sensitive: true }).addAnswer(
 		"- Mañana: 10:00 AM a 2:00 PM",
 		"- Tarde: 3:00 PM a 7:00 PM",
 		"",
-		"Días especiales de Diciembre:",
-		"- Sábado 13",
-		"- Horario: 10:00 AM a 2:00 PM",
+		"⚠️ *AVISO IMPORTANTE:*",
+		"La óptica estará cerrada jueves 1, viernes 2 y sábado 3.",
+		"El lunes 5 regresamos con normalidad.",
 		"",
 		"Si necesita otra información, puede escribir otro número de las opciones anteriores.",
 	].join("\n")

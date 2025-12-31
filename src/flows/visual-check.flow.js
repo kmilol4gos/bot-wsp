@@ -13,8 +13,7 @@ const visualCheckFlow = addKeyword(["2"], { sensitive: true }).addAnswer(
 		"- Lunes a Viernes:",
 		"  Mañana: 11:30 AM a 1:30 PM",
 		"  Tarde: 3:30 PM a 6:00 PM",
-		"- Sábado 13 de Diciembre:",
-		"  De 10:00 AM a 2:00 PM",
+		"⚠️ *AVISO:* La óptica estará cerrada jueves 1, viernes 2 y sábado 3. El lunes 5 regresamos con normalidad.",
 		"",
 	].join("\n")
 );
