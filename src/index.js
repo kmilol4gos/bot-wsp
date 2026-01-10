@@ -60,7 +60,7 @@ async function sendWelcomeMessage(sock, sender) {
 
 Soy su asistente virtual y estoy aquí para ayudarle. 
 
-✅ *DÍAS ESPECIALES:* Abriremos los sábados 11 y 25 de Septiembre.
+✅ *DÍAS ESPECIALES:* Abriremos los sábados 10 y 24 de Enero.
 
 Para obtener información, por favor escriba el NÚMERO de la opción que desea consultar:
 
@@ -80,8 +80,8 @@ Entre semana:
 - Mañana: 10:00 AM a 2:00 PM
 - Tarde: 3:00 PM a 7:00 PM
 
-Días especiales de Octubre:
-- Sábado 11 y Sábado 25
+Días especiales de Enero:
+- Sábado 10 y Sábado 24
 - Horario: 10:00 AM a 2:00 PM
 
 Si necesita otra información, puede escribir otro número de las opciones anteriores.`;
@@ -97,7 +97,7 @@ Horarios para chequeos:
 - Lunes a Viernes:
   Mañana: 11:30 AM a 1:30 PM
   Tarde: 3:30 PM a 6:00 PM
-- Sábado 11 y Sábado 25 de Octubre:
+- Sábado 10 y Sábado 24 de Enero:
   De 10:00 AM a 2:00 PM
 
 Para agendar su hora:

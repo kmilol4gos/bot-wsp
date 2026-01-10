@@ -15,7 +15,7 @@ const welcomeFlow = addKeyword([
 		[
 			"Soy su asistente virtual y estoy aquí para ayudarle.",
 			"",
-			"⚠️ *AVISO IMPORTANTE:* La óptica estará cerrada jueves 1, viernes 2 y sábado 3. El lunes 5 regresamos con normalidad.",
+			"✅ *DÍAS ESPECIALES:* Abriremos los sábados 10 y 24 de Enero.",
 			"",
 			"Para obtener información, por favor escriba el NÚMERO de la opción que desea consultar:",
 			"",
