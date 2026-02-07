@@ -12,12 +12,8 @@ const hoursFlow = addKeyword(["1"], { sensitive: true }).addAnswer(
 		"- Mañana: 10:00 AM a 2:00 PM",
 		"- Tarde: 3:00 PM a 7:00 PM",
 		"",
-		"Días especiales de Enero:",
-		"- Sábado 10 y Sábado 24",
-		"- Horario: 10:00 AM a 2:00 PM",
-		"",
 		"Si necesita otra información, puede escribir otro número de las opciones anteriores.",
-	].join("\n")
+	].join("\n"),
 );
 
 module.exports = hoursFlow;

@@ -15,7 +15,7 @@ const welcomeFlow = addKeyword([
 		[
 			"Soy su asistente virtual y estoy aquí para ayudarle.",
 			"",
-			"✅ *DÍAS ESPECIALES:* Abriremos los sábados 10 y 24 de Enero.",
+			"🏖️ *AVISO IMPORTANTE:* Estaremos de vacaciones del 9 al 16 de febrero. Regresamos el martes 17 de febrero.",
 			"",
 			"Para obtener información, por favor escriba el NÚMERO de la opción que desea consultar:",
 			"",
@@ -24,7 +24,7 @@ const welcomeFlow = addKeyword([
 			"3️⃣  Para saber *CÓMO LLEGAR* a nuestra óptica",
 			"4️⃣  Para ver nuestra *INFORMACIÓN BANCARIA*",
 		].join("\n"),
-		{ delay: 500 }
+		{ delay: 500 },
 	);
 
 module.exports = welcomeFlow;
